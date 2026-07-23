@@ -7,6 +7,7 @@ import Switch from 'flarum/common/components/Switch';
 import type Mithril from 'mithril';
 import RuleEditor from './RuleEditor';
 import type { RuleDraft } from './RuleEditor';
+import ZapierPanel from './ZapierPanel';
 
 const t = (key: string, params?: Record<string, unknown>) =>
   app.translator.trans(`ernestdefoe-connect.admin.${key}`, params);
@@ -33,6 +34,9 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
   private meta: any = null;
   private editing: RuleDraft | null = null;
   private savingRule = false;
+  private zapierClientId = '';
+  private zapierAppSlug = '';
+  private savingZapier = false;
   private newLabel = '';
   private newScopes: Record<string, boolean> = { read: true, write: true };
   private creating = false;
@@ -40,7 +44,32 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
 
   oninit(vnode: Mithril.Vnode<ExtensionPageAttrs, this>) {
     super.oninit(vnode);
+    this.zapierClientId = (app.data.settings['ernestdefoe-connect.zapier_client_id'] as string) || '';
+    this.zapierAppSlug = (app.data.settings['ernestdefoe-connect.zapier_app_slug'] as string) || '';
     this.load();
+  }
+
+  private saveZapier(clientId: string, appSlug: string) {
+    this.savingZapier = true;
+    m.redraw();
+    app.request({
+      method: 'POST',
+      url: `${this.api()}/settings`,
+      body: {
+        'ernestdefoe-connect.zapier_client_id': clientId,
+        'ernestdefoe-connect.zapier_app_slug': appSlug,
+      },
+    })
+      .then(() => {
+        this.zapierClientId = clientId;
+        this.zapierAppSlug = appSlug;
+        app.data.settings['ernestdefoe-connect.zapier_client_id'] = clientId;
+        app.data.settings['ernestdefoe-connect.zapier_app_slug'] = appSlug;
+        this.savingZapier = false;
+        app.alerts.show({ type: 'success' }, t('zapier_saved'));
+        m.redraw();
+      })
+      .catch(() => { this.savingZapier = false; app.alerts.show({ type: 'error' }, t('rule_error')); m.redraw(); });
   }
 
   private api() {
@@ -145,6 +174,14 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
       <div className="ExtensionPage-settings ConnectAdmin">
         <div className="container">
           <p className="helpText">{t('intro')}</p>
+
+          {/* Zapier — the headline in-admin automation experience */}
+          {ZapierPanel.component({
+            clientId: this.zapierClientId,
+            appSlug: this.zapierAppSlug,
+            saving: this.savingZapier,
+            onSave: (clientId: string, appSlug: string) => this.saveZapier(clientId, appSlug),
+          })}
 
           {/* Rules engine */}
           <div className="ConnectAdmin-rulesHead">

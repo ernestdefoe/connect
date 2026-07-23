@@ -31,6 +31,21 @@ Connect covers both directions of automation:
 
 ---
 
+## Set it all up without leaving your forum
+
+Connect embeds Zapier's official experience right in your admin panel. Browse
+6,000+ apps, pick a recipe — *Share new discussions to a Facebook Page*, *Post to
+Slack*, *Add members to Mailchimp* — and build or manage Zaps in place. No tab
+switching, no developer knowledge required.
+
+![The in-admin Zapier experience — curated recipes plus the full Zap builder](.github/screenshots/zapier-embed.png)
+
+Paste your Zapier integration's **Client ID** once (Admin → Connect) and the full
+experience appears, themed to match your forum. Prefer Make, n8n, or IFTTT?
+They all work off the same [REST API](#rest-api) and webhooks.
+
+---
+
 ## Automation rules (no external service needed)
 
 Pick a **trigger**, add optional **conditions**, and choose one or more

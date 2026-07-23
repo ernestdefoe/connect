@@ -35,3 +35,24 @@
 .ConnectRule-actions { display: flex; gap: 8px; margin-top: 8px; }
 .ConnectAdmin-emptyRules { display: flex; align-items: center; gap: 14px; margin: 6px 0 10px; }
 .ConnectAdmin-emptyRules .helpText { margin: 0; }
+
+/* Zapier embed — the headline automation panel */
+.ConnectZapier { border: 1px solid var(--control-bg); border-radius: 12px; padding: 18px 20px; margin: 16px 0 26px; background: var(--body-bg); }
+.ConnectZapier-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.ConnectZapier-head h3 { margin: 0 0 4px; font-weight: 700; }
+.ConnectZapier-head h3 .fa-bolt { color: #ff5a2c; margin-right: 6px; }
+.ConnectZapier-head .helpText { margin: 0; max-width: 70ch; }
+.ConnectZapier-setup { margin-top: 14px; padding: 14px 16px; border: 1px dashed var(--control-bg); border-radius: 10px; }
+.ConnectZapier-steps { margin: 0 0 12px; padding-left: 20px; color: var(--muted-color); font-size: 13px; }
+.ConnectZapier-steps li { margin-bottom: 4px; }
+.ConnectZapier-setupRow { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.ConnectZapier-setupRow label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 13px; flex: 1; min-width: 200px; }
+.ConnectZapier-loading { display: flex; align-items: center; gap: 10px; padding: 24px; color: var(--muted-color); }
+.ConnectZapier-embed { margin-top: 16px; }
+.ConnectZapier-embed h4 { font-weight: 700; margin: 18px 0 8px; }
+.ConnectZapier-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.ConnectZapier-tile { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--control-bg); border-radius: 10px; background: var(--control-bg); cursor: pointer; font-weight: 600; color: var(--text-color); transition: border-color .15s, transform .05s; }
+.ConnectZapier-tile:hover { border-color: #ff5a2c; }
+.ConnectZapier-tile:active { transform: translateY(1px); }
+.ConnectZapier-tile.is-active { border-color: #ff5a2c; box-shadow: inset 0 0 0 1px #ff5a2c; }
+.ConnectZapier-tile i { font-size: 20px; width: 22px; text-align: center; }

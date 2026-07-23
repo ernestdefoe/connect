@@ -16,6 +16,28 @@ ernestdefoe-connect:
     copied: Copied to clipboard.
     secret: secret
 
+    # Zapier embed
+    zapier_heading: Automations powered by Zapier
+    zapier_intro: >
+      Connect your forum to 6,000+ apps — post new discussions to a Facebook Page,
+      Slack, or Discord, add members to a mailing list, log activity to a
+      spreadsheet, and more. Set it all up right here, no code needed.
+    zapier_settings_btn: Settings
+    zapier_step_register: "Create the Connect integration on Zapier:"
+    zapier_step_embed: Turn on embedding in your integration's settings and copy its Client ID.
+    zapier_step_paste: Paste the Client ID below — the full Zapier experience appears right here.
+    zapier_client_id: Zapier Client ID
+    zapier_app_slug: App slug (optional)
+    zapier_save: Save & connect
+    zapier_client_id_help: >
+      The Client ID is public (it identifies your Zapier integration to the embed).
+      The optional app slug scopes the suggested recipes to your integration.
+    zapier_loading: Loading the Zapier experience…
+    zapier_recipes: Popular recipes
+    zapier_build_anything: Build anything
+    zapier_build_anything_help: Browse every trigger and action, and manage the Zaps you've already created.
+    zapier_saved: Zapier settings saved.
+
     keys_heading: API keys
     no_keys: No keys yet — create one above to connect a service.
     col_label: Label
