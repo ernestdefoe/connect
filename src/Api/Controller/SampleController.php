@@ -50,6 +50,15 @@ class SampleController implements RequestHandlerInterface
                     'id' => (int) $d->id, 'title' => $d->title, 'slug' => $d->slug,
                     'url' => $base . '/d/' . $d->id . '-' . $d->slug,
                     'author' => $d->user?->display_name, 'authorId' => (int) $d->user_id,
+                    // Keep the sample shape identical to the live webhook (Zapier
+                    // requires perform + performList to match).
+                    'tagList' => method_exists($d, 'tags') ? (function () use ($d) {
+                        try {
+                            return $d->tags->pluck('slug')->implode(',');
+                        } catch (\Throwable $e) {
+                            return '';
+                        }
+                    })() : '',
                     'createdAt' => optional($d->created_at)->toIso8601String(),
                 ])->values()->all(),
 

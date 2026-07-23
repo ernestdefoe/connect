@@ -96,7 +96,7 @@ All routes are under your forum's API root (`/api`). Authenticate with
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/connect/me` | Who this key acts as (auth test) |
-| `POST` | `/connect/hooks` | Subscribe: `{ event, target_url }` → REST Hook |
+| `POST` | `/connect/hooks` | Subscribe: `{ event, targetUrl }` → REST Hook, returns `{ id }` |
 | `DELETE` | `/connect/hooks/{id}` | Unsubscribe |
 | `GET` | `/connect/samples/{event}` | Recent real items shaped like the payload (Zap setup) |
 | `POST` | `/connect/actions/discussions` | Create a discussion `{ title, content }` |

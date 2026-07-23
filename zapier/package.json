@@ -1,0 +1,22 @@
+{
+  "name": "connect-for-flarum-zapier",
+  "version": "1.0.0",
+  "description": "Zapier integration for the Connect extension — automate any self-hosted Flarum 2 forum.",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test",
+    "validate": "zapier validate",
+    "push": "zapier push"
+  },
+  "engines": {
+    "node": ">=18",
+    "npm": ">=8"
+  },
+  "dependencies": {
+    "zapier-platform-core": "^16.0.0"
+  },
+  "private": true,
+  "license": "MIT",
+  "author": "Ernest Defoe <ernestdefoe@gmail.com>"
+}
