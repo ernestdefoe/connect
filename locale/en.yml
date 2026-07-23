@@ -1,0 +1,4 @@
+ernestdefoe-connect:
+  admin:
+    # (admin UI strings land here in the next phase)
+    nav_label: Connect

@@ -1,0 +1,44 @@
+{
+    "name": "ernestdefoe/connect",
+    "description": "Automation for Flarum 2 — outgoing webhooks, a scoped REST API, and an in-app if-this-then-that Rules engine. Works with Zapier, Make, IFTTT, n8n and anything that speaks webhooks.",
+    "type": "flarum-extension",
+    "license": "MIT",
+    "keywords": ["flarum", "extension", "automation", "webhooks", "zapier", "rules", "integration"],
+    "authors": [
+        {
+            "name": "Ernestdefoe",
+            "email": "ernestdefoe@gmail.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/ernestdefoe/connect/issues",
+        "source": "https://github.com/ernestdefoe/connect"
+    },
+    "require": {
+        "php": "^8.3",
+        "flarum/core": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ernestdefoe\\Connect\\": "src/"
+        }
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "Connect",
+            "category": "feature",
+            "icon": {
+                "name": "fas fa-bolt",
+                "backgroundColor": "#ff5a2c",
+                "color": "#fff"
+            },
+            "optional-dependencies": [
+                "flarum/tags",
+                "flarum/messages"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
