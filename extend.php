@@ -46,6 +46,7 @@ return [
         ->get('/connect/samples/{event}', 'connect.samples', Controller\SampleController::class)
         // Actions (Creates)
         ->post('/connect/actions/discussions', 'connect.actions.discussions', Controller\Action\CreateDiscussionController::class)
+        ->post('/connect/actions/posts', 'connect.actions.posts', Controller\Action\CreatePostController::class)
 
         // ── Admin (admin-gated in the controllers) ──────────────────────────
         ->get('/connect/keys', 'connect.keys.list', Admin\ListKeysController::class)
