@@ -53,5 +53,11 @@ return [
         ->post('/connect/keys', 'connect.keys.create', Admin\CreateKeyController::class)
         ->delete('/connect/keys/{id}', 'connect.keys.delete', Admin\DeleteKeyController::class)
         ->get('/connect/subscriptions', 'connect.subscriptions', Admin\ListSubscriptionsController::class)
-        ->get('/connect/events', 'connect.events', Admin\ListEventsController::class),
+        ->get('/connect/events', 'connect.events', Admin\ListEventsController::class)
+        ->get('/connect/meta', 'connect.meta', Admin\MetaController::class)
+        // Rules engine (admin)
+        ->get('/connect/rules', 'connect.rules.list', Admin\ListRulesController::class)
+        ->post('/connect/rules', 'connect.rules.create', Admin\SaveRuleController::class)
+        ->patch('/connect/rules/{id}', 'connect.rules.update', Admin\SaveRuleController::class)
+        ->delete('/connect/rules/{id}', 'connect.rules.delete', Admin\DeleteRuleController::class),
 ];

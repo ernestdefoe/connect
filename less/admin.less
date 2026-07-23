@@ -18,3 +18,20 @@
 .ConnectAdmin-events { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; }
 .ConnectAdmin-events li { background: var(--control-bg); border-radius: 6px; padding: 7px 10px; font-size: 13px; }
 .ConnectAdmin-events code { color: var(--link-color); }
+
+/* Rules engine */
+.ConnectAdmin-rulesHead { display: flex; align-items: center; justify-content: space-between; }
+.ConnectAdmin-rowActions { white-space: nowrap; }
+.ConnectRule-editor { border: 1px solid var(--control-bg); border-radius: 10px; padding: 16px 18px; margin: 10px 0 18px; }
+.ConnectRule-editor .Form-group { margin-bottom: 16px; }
+.ConnectRule-editor label { font-weight: 700; display: block; margin-bottom: 6px; }
+.ConnectRule-matchRow { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: var(--muted-color); font-size: 13px; }
+.ConnectRule-matchRow .Select { flex: 0 0 auto; }
+.ConnectRule-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ConnectRule-row .FormControl, .ConnectRule-row .Select { flex: 1; }
+.ConnectRule-row .Button--icon { flex: 0 0 auto; }
+.ConnectRule-actionRow textarea.FormControl { min-height: 44px; }
+.ConnectRule-add { margin-top: 2px; }
+.ConnectRule-actions { display: flex; gap: 8px; margin-top: 8px; }
+.ConnectAdmin-emptyRules { display: flex; align-items: center; gap: 14px; margin: 6px 0 10px; }
+.ConnectAdmin-emptyRules .helpText { margin: 0; }

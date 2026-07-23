@@ -30,3 +30,46 @@ ernestdefoe-connect:
     triggers_heading: Available triggers
     subs_heading: Live subscriptions
     no_subs: Nothing is subscribed yet. When a Zap (or similar) turns on, it appears here.
+
+    # Rules engine
+    rules_heading: Automation rules
+    rules_intro: >
+      Rules run right here on your forum — no external service needed. Pick a
+      trigger, add conditions, and choose what happens.
+    new_rule_btn: New rule
+    no_rules: No rules yet. Create one to automate something automatically.
+    col_rule: Rule
+    col_trigger: Trigger
+    col_runs: Runs
+    col_on: On
+    rule_saved: Rule saved.
+    rule_error: Could not save the rule.
+    confirm_delete_rule: "Delete “{name}”?"
+
+    rule_name: Name
+    rule_name_placeholder: e.g. Tag support questions
+    rule_when: When this happens
+    rule_conditions: Only if…
+    rule_match_pre: Match
+    rule_match_all: all
+    rule_match_any: any
+    rule_match_post: of these conditions
+    rule_field: Field (e.g. title)
+    rule_value: Value
+    add_condition: Add condition
+    rule_do: Then do this
+    add_action: Add action
+    action_reply_content: Reply text
+    save_rule: Save rule
+    cancel: Cancel
+
+    op_equals: is
+    op_not_equals: is not
+    op_contains: contains
+    op_not_contains: does not contain
+    op_starts_with: starts with
+    op_greater_than: is greater than
+    op_less_than: is less than
+    op_is_empty: is empty
+    op_is_not_empty: is not empty
+    op_matches: matches (regex)

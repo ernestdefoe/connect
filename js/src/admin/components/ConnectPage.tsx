@@ -3,7 +3,10 @@ import ExtensionPage from 'flarum/admin/components/ExtensionPage';
 import type { ExtensionPageAttrs } from 'flarum/admin/components/ExtensionPage';
 import Button from 'flarum/common/components/Button';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
+import Switch from 'flarum/common/components/Switch';
 import type Mithril from 'mithril';
+import RuleEditor from './RuleEditor';
+import type { RuleDraft } from './RuleEditor';
 
 const t = (key: string, params?: Record<string, unknown>) =>
   app.translator.trans(`ernestdefoe-connect.admin.${key}`, params);
@@ -14,6 +17,7 @@ interface Key {
 }
 interface Sub { id: number; event: string; targetUrl: string; keyLabel: string | null; }
 interface Evt { key: string; label: string; }
+interface Rule { id: number; name: string; event: string; enabled: boolean; match: string; conditions: any[]; actions: any[]; runs: number; }
 
 /**
  * Connect admin page: create/revoke API keys, see which triggers exist, and
@@ -25,6 +29,10 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
   private keys: Key[] = [];
   private subs: Sub[] = [];
   private events: Evt[] = [];
+  private rules: Rule[] = [];
+  private meta: any = null;
+  private editing: RuleDraft | null = null;
+  private savingRule = false;
   private newLabel = '';
   private newScopes: Record<string, boolean> = { read: true, write: true };
   private creating = false;
@@ -45,15 +53,54 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
       app.request<any>({ method: 'GET', url: `${this.api()}/connect/keys` }),
       app.request<any>({ method: 'GET', url: `${this.api()}/connect/subscriptions` }),
       app.request<any>({ method: 'GET', url: `${this.api()}/connect/events` }),
+      app.request<any>({ method: 'GET', url: `${this.api()}/connect/rules` }),
+      app.request<any>({ method: 'GET', url: `${this.api()}/connect/meta` }),
     ])
-      .then(([k, s, e]) => {
+      .then(([k, s, e, r, meta]) => {
         this.keys = k.data || [];
         this.subs = s.data || [];
         this.events = e.data || [];
+        this.rules = r.data || [];
+        this.meta = meta.data || null;
         this.loading = false;
         m.redraw();
       })
       .catch(() => { this.loading = false; m.redraw(); });
+  }
+
+  private newRule() {
+    this.editing = { name: '', event: this.events[0]?.key || '', enabled: true, match: 'all', conditions: [], actions: [] };
+    m.redraw();
+  }
+
+  private saveRule(draft: RuleDraft) {
+    this.savingRule = true;
+    m.redraw();
+    const isNew = !draft.id;
+    const url = isNew ? `${this.api()}/connect/rules` : `${this.api()}/connect/rules/${draft.id}`;
+    app.request<any>({ method: isNew ? 'POST' : 'PATCH', url, body: { data: draft } })
+      .then((res) => {
+        if (isNew) this.rules.push(res.data);
+        else this.rules = this.rules.map((x) => (x.id === res.data.id ? res.data : x));
+        this.editing = null;
+        this.savingRule = false;
+        app.alerts.show({ type: 'success' }, t('rule_saved'));
+        m.redraw();
+      })
+      .catch(() => { this.savingRule = false; app.alerts.show({ type: 'error' }, t('rule_error')); m.redraw(); });
+  }
+
+  private toggleRule(rule: Rule) {
+    rule.enabled = !rule.enabled;
+    app.request({ method: 'PATCH', url: `${this.api()}/connect/rules/${rule.id}`, body: { data: { enabled: rule.enabled } } });
+  }
+
+  private deleteRule(rule: Rule) {
+    if (!confirm(t('confirm_delete_rule', { name: rule.name }) as unknown as string)) return;
+    app.request({ method: 'DELETE', url: `${this.api()}/connect/rules/${rule.id}` }).then(() => {
+      this.rules = this.rules.filter((r) => r.id !== rule.id);
+      m.redraw();
+    });
   }
 
   private create() {
@@ -98,6 +145,48 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
       <div className="ExtensionPage-settings ConnectAdmin">
         <div className="container">
           <p className="helpText">{t('intro')}</p>
+
+          {/* Rules engine */}
+          <div className="ConnectAdmin-rulesHead">
+            <h3>{t('rules_heading')}</h3>
+            {!this.editing
+              ? Button.component({ className: 'Button Button--primary', icon: 'fas fa-plus', onclick: () => this.newRule() }, t('new_rule_btn'))
+              : null}
+          </div>
+          <p className="helpText">{t('rules_intro')}</p>
+
+          {this.editing ? (
+            RuleEditor.component({
+              rule: this.editing,
+              meta: this.meta || { events: this.events, actions: [], operators: [], groups: [], tags: [] },
+              saving: this.savingRule,
+              onSave: (r: RuleDraft) => this.saveRule(r),
+              onCancel: () => { this.editing = null; },
+            })
+          ) : this.rules.length === 0 ? (
+            <div className="ConnectAdmin-emptyRules">
+              <p className="helpText">{t('no_rules')}</p>
+              {Button.component({ className: 'Button Button--primary', icon: 'fas fa-plus', onclick: () => this.newRule() }, t('new_rule_btn'))}
+            </div>
+          ) : (
+            <table className="ConnectAdmin-table">
+              <thead><tr><th>{t('col_rule')}</th><th>{t('col_trigger')}</th><th>{t('col_runs')}</th><th>{t('col_on')}</th><th /></tr></thead>
+              <tbody>
+                {this.rules.map((r) => (
+                  <tr>
+                    <td><b>{r.name}</b></td>
+                    <td><code>{r.event}</code></td>
+                    <td>{r.runs}</td>
+                    <td>{Switch.component({ state: r.enabled, onchange: () => this.toggleRule(r) })}</td>
+                    <td className="ConnectAdmin-rowActions">
+                      {Button.component({ className: 'Button Button--icon Button--flat', icon: 'fas fa-pen', onclick: () => { this.editing = { id: r.id, name: r.name, event: r.event, enabled: r.enabled, match: r.match, conditions: r.conditions, actions: r.actions }; } })}
+                      {Button.component({ className: 'Button Button--icon Button--flat ConnectAdmin-revoke', icon: 'fas fa-trash', onclick: () => this.deleteRule(r) })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
 
           {/* Create */}
           <div className="ConnectAdmin-create">

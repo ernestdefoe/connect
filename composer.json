@@ -33,8 +33,7 @@
                 "color": "#fff"
             },
             "optional-dependencies": [
-                "flarum/tags",
-                "flarum/messages"
+                "flarum/tags"
             ]
         }
     },
