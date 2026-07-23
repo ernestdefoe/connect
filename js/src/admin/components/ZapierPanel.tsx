@@ -130,7 +130,7 @@ export default class ZapierPanel extends Component<Attrs> {
         <div className="ConnectZapier-setupRow">
           <label>
             {t('zapier_client_id')}
-            <input className="FormControl" placeholder="e.g. abc123..." value={this.draftClientId}
+            <input className="FormControl" placeholder={t('zapier_client_id_placeholder') as string} value={this.draftClientId}
               oninput={(e: any) => { this.draftClientId = e.target.value; }} />
           </label>
           <label>

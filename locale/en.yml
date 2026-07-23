@@ -27,6 +27,7 @@ ernestdefoe-connect:
     zapier_step_embed: Turn on embedding in your integration's settings and copy its Client ID.
     zapier_step_paste: Paste the Client ID below — the full Zapier experience appears right here.
     zapier_client_id: Zapier Client ID
+    zapier_client_id_placeholder: "e.g. abc123..."
     zapier_app_slug: App slug (optional)
     zapier_save: Save & connect
     zapier_client_id_help: >
