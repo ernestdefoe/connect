@@ -1,4 +1,32 @@
 ernestdefoe-connect:
   admin:
-    # (admin UI strings land here in the next phase)
-    nav_label: Connect
+    intro: >
+      Connect lets external services automate your forum. Create an API key, then
+      use it in Zapier, Make, IFTTT, n8n, or anything that speaks webhooks. Each
+      key acts as a user and signs its outgoing webhooks with its secret.
+
+    new_key: Create a key
+    label_placeholder: What's this key for? (e.g. Zapier)
+    scope_read: Read (triggers)
+    scope_write: Write (actions)
+    create: Create key
+    key_created: API key created.
+    key_error: Could not create the key.
+    confirm_revoke: "Revoke “{label}”? Any automation using it will stop immediately."
+    copied: Copied to clipboard.
+    secret: secret
+
+    keys_heading: API keys
+    no_keys: No keys yet — create one above to connect a service.
+    col_label: Label
+    col_actsas: Acts as
+    col_scopes: Scopes
+    col_creds: Token & secret
+    col_subs: Subscriptions
+    col_event: Event
+    col_target: Target URL
+    col_key: Key
+
+    triggers_heading: Available triggers
+    subs_heading: Live subscriptions
+    no_subs: Nothing is subscribed yet. When a Zap (or similar) turns on, it appears here.

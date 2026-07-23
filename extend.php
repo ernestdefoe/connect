@@ -9,6 +9,7 @@
 namespace Ernestdefoe\Connect;
 
 use Ernestdefoe\Connect\Api\Controller;
+use Ernestdefoe\Connect\Api\Controller\Admin;
 use Ernestdefoe\Connect\Console\CreateKeyCommand;
 use Ernestdefoe\Connect\Listener\DispatchWebhooks;
 use Ernestdefoe\Connect\Middleware\AuthenticateWithConnectKey;
@@ -17,6 +18,10 @@ use Flarum\Http\Middleware\CheckCsrfToken;
 
 return [
     new Extend\Locales(__DIR__ . '/locale'),
+
+    (new Extend\Frontend('admin'))
+        ->js(__DIR__ . '/js/dist/admin.js')
+        ->css(__DIR__ . '/less/admin.less'),
 
     (new Extend\Console())
         ->command(CreateKeyCommand::class),
@@ -40,5 +45,12 @@ return [
         // performList sample data for the Zap-setup step
         ->get('/connect/samples/{event}', 'connect.samples', Controller\SampleController::class)
         // Actions (Creates)
-        ->post('/connect/actions/discussions', 'connect.actions.discussions', Controller\Action\CreateDiscussionController::class),
+        ->post('/connect/actions/discussions', 'connect.actions.discussions', Controller\Action\CreateDiscussionController::class)
+
+        // ── Admin (admin-gated in the controllers) ──────────────────────────
+        ->get('/connect/keys', 'connect.keys.list', Admin\ListKeysController::class)
+        ->post('/connect/keys', 'connect.keys.create', Admin\CreateKeyController::class)
+        ->delete('/connect/keys/{id}', 'connect.keys.delete', Admin\DeleteKeyController::class)
+        ->get('/connect/subscriptions', 'connect.subscriptions', Admin\ListSubscriptionsController::class)
+        ->get('/connect/events', 'connect.events', Admin\ListEventsController::class),
 ];
