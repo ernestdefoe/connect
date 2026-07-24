@@ -23,16 +23,25 @@ ernestdefoe-connect:
       Slack, or Discord, add members to a mailing list, log activity to a
       spreadsheet, and more. Set it all up right here, no code needed.
     zapier_settings_btn: Settings
-    zapier_step_register: "Create the Connect integration on Zapier:"
-    zapier_step_embed: Turn on embedding in your integration's settings and copy its Client ID.
-    zapier_step_paste: Paste the Client ID below — the full Zapier experience appears right here.
+    zapier_today_heading: Use Zapier today
+    zapier_today_body: >
+      You don't need anything below to automate with Zapier. Create an API key
+      further down this page, then add this forum in Zapier using your forum's
+      URL and that key. Triggers, actions and webhooks all work right now.
+    zapier_embed_heading: Show the Zap builder on this page (optional)
+    zapier_embed_requires: >
+      Browsing and building Zaps without leaving your forum needs a Client ID,
+      which Zapier only issues once your integration is published as a public app
+      in their App Directory. Until then this section stays empty — everything
+      above still works.
     zapier_client_id: Zapier Client ID
     zapier_client_id_placeholder: "e.g. abc123..."
     zapier_app_slug: App slug (optional)
     zapier_save: Save & connect
     zapier_client_id_help: >
-      The Client ID is public (it identifies your Zapier integration to the embed).
-      The optional app slug scopes the suggested recipes to your integration.
+      Find it in Zapier's Developer Platform under Embed → Settings → Credentials
+      (public integrations only). The optional app slug scopes the suggested
+      recipes to your integration.
     zapier_loading: Loading the Zapier experience…
     zapier_recipes: Popular recipes
     zapier_build_anything: Build anything

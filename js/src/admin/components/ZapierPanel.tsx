@@ -118,15 +118,22 @@ export default class ZapierPanel extends Component<Attrs> {
     );
   }
 
-  /** Admin setup: paste the Zapier Client ID (and optional app slug). */
+  /**
+   * Setup state. Leads with what actually works today (an API key + forum URL is
+   * all Zapier needs), because the embedded experience below is gated on Zapier
+   * issuing a Client ID — which only happens once the integration is published
+   * publicly in their App Directory.
+   */
   private setup(): Mithril.Children {
     return (
       <div className="ConnectZapier-setup">
-        <ol className="ConnectZapier-steps">
-          <li>{t('zapier_step_register')} <a href="https://developer.zapier.com/" target="_blank" rel="noopener noreferrer">developer.zapier.com</a></li>
-          <li>{t('zapier_step_embed')}</li>
-          <li>{t('zapier_step_paste')}</li>
-        </ol>
+        <div className="ConnectZapier-today">
+          <h4>{t('zapier_today_heading')}</h4>
+          <p className="helpText">{t('zapier_today_body')}</p>
+        </div>
+
+        <h4>{t('zapier_embed_heading')}</h4>
+        <p className="helpText">{t('zapier_embed_requires')}</p>
         <div className="ConnectZapier-setupRow">
           <label>
             {t('zapier_client_id')}
