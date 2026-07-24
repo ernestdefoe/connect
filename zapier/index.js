@@ -18,6 +18,13 @@ module.exports = {
   version,
   platformVersion,
 
+  // Don't let the platform silently rewrite input before it reaches us — our
+  // endpoints validate their own input, and predictable payloads are easier to
+  // debug (Zapier check D028).
+  flags: {
+    cleanInputData: false,
+  },
+
   authentication,
 
   // Every request carries the Bearer key; every response is checked for errors.

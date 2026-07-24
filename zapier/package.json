@@ -14,7 +14,7 @@
     "npm": ">=8"
   },
   "dependencies": {
-    "zapier-platform-core": "^19.0.0"
+    "zapier-platform-core": "19.0.0"
   },
   "private": true,
   "license": "MIT",
