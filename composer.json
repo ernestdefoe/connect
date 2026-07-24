@@ -1,6 +1,6 @@
 {
     "name": "ernestdefoe/connect",
-    "description": "Automation for Flarum 2 — outgoing webhooks, a scoped REST API, and an in-app if-this-then-that Rules engine. Works with Zapier, Make, IFTTT, n8n and anything that speaks webhooks.",
+    "description": "Automation for Flarum 2 — an embedded Zapier experience in your admin, an in-app if-this-then-that Rules engine, outgoing webhooks, and a scoped REST API. Works with Zapier, Make, IFTTT, n8n and anything that speaks webhooks.",
     "type": "flarum-extension",
     "license": "MIT",
     "keywords": ["flarum", "extension", "automation", "webhooks", "zapier", "rules", "integration"],
