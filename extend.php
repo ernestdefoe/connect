@@ -44,6 +44,10 @@ return [
         ->delete('/connect/hooks/{id}', 'connect.hooks.unsubscribe', Controller\UnsubscribeHookController::class)
         // performList sample data for the Zap-setup step
         ->get('/connect/samples/{event}', 'connect.samples', Controller\SampleController::class)
+        // Pickers behind Zapier's dynamic dropdowns (choose a discussion/tag by
+        // name instead of typing a numeric ID)
+        ->get('/connect/discussions', 'connect.discussions', Controller\ListDiscussionsController::class)
+        ->get('/connect/tags', 'connect.tags', Controller\ListTagsController::class)
         // Actions (Creates)
         ->post('/connect/actions/discussions', 'connect.actions.discussions', Controller\Action\CreateDiscussionController::class)
         ->post('/connect/actions/posts', 'connect.actions.posts', Controller\Action\CreatePostController::class)

@@ -6,8 +6,20 @@
 // GET /api/connect/me, which returns the user the key acts as.
 
 const test = async (z, bundle) => {
+  const site = normalizeSite(bundle.authData.siteUrl);
+
+  // Catch the common mistakes here rather than letting them surface as a
+  // confusing network error (Zapier check D026).
+  if (!/^https?:\/\/[^\s/]+\.[^\s/]+/i.test(site)) {
+    throw new z.errors.Error(
+      'Enter your forum\'s full address including https://, for example https://community.example.com',
+      'InvalidSiteUrl',
+      400
+    );
+  }
+
   const response = await z.request({
-    url: `${normalizeSite(bundle.authData.siteUrl)}/api/connect/me`,
+    url: `${site}/api/connect/me`,
     method: 'GET',
   });
   // /connect/me answers JSON:API-style: { data: { attributes: {...} } }.
@@ -46,7 +58,7 @@ module.exports = {
         type: 'password',
         required: true,
         helpText:
-          'In your forum: **Admin → Connect → Create a key** (give it Read + Write). Paste the `ck_…` token here.',
+          'In your forum go to **Admin → Connect → Create a key** (give it Read + Write), then paste the `ck_…` token here. [Step-by-step guide](https://github.com/ernestdefoe/connect#connecting-zapier--make--ifttt--n8n).',
       },
     ],
   },

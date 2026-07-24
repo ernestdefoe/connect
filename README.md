@@ -41,10 +41,14 @@ switching, no developer knowledge required.
 ![The in-admin Zapier experience — curated recipes plus the full Zap builder](.github/screenshots/zapier-embed.png)
 
 Connecting takes one API key — there's **nothing to register with Zapier and no
-developer account needed**. Connect ships its own published Zapier integration
-that every forum shares; because it authenticates per-site (your forum URL + your
-key), one integration serves everyone. The in-page Zap builder switches itself on
-once that integration clears Zapier's public review, themed to match your forum.
+developer account needed**. Connect ships its own Zapier integration that every
+forum shares; because it authenticates per-site (your forum URL + your key), one
+integration serves everyone. **Admin → Connect** has an *Open Connect on Zapier*
+button that takes you straight there.
+
+The in-page Zap builder shown above switches itself on once that integration is
+listed publicly in Zapier's directory — until then you build Zaps in Zapier
+itself, with everything else working exactly the same.
 
 Prefer Make, n8n, or IFTTT? They all work off the same [REST API](#rest-api) and
 webhooks — no Zapier account involved.

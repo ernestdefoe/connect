@@ -28,10 +28,13 @@ module.exports = {
     inputFields: [
       {
         key: 'discussionId',
-        label: 'Discussion ID',
-        type: 'integer',
+        label: 'Discussion',
         required: true,
-        helpText: 'The ID of the discussion to reply to (e.g. from a "New Discussion" trigger).',
+        // Pick a discussion by title; still accepts an ID mapped from an
+        // earlier step (e.g. a "New Discussion" trigger).
+        dynamic: 'discussion_list.id.title',
+        altersDynamicFields: false,
+        helpText: 'Choose a discussion, or map an ID from an earlier step.',
       },
       { key: 'content', label: 'Content', type: 'text', required: true, helpText: 'The reply body. Markdown is supported.' },
     ],

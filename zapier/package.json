@@ -1,6 +1,6 @@
 {
   "name": "connect-for-flarum-zapier",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Zapier integration for the Connect extension \u00e2\u20ac\u201d automate any self-hosted Flarum 2 forum.",
   "main": "index.js",
   "type": "commonjs",

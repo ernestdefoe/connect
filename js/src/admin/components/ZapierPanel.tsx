@@ -41,6 +41,12 @@ const POPULAR: { slug: string; label: string; icon: string }[] = [
 const DEFAULT_CLIENT_ID = '';
 const DEFAULT_APP_SLUG = 'connect-for-flarum';
 
+// Zapier's public invite link for Connect's integration. Private integrations
+// can be shared this way with no user limit and no Client ID, so every forum
+// running Connect can use Zapier today — the embedded builder above is only a
+// convenience layer on top. Designed to be shared publicly.
+const SHARE_URL = 'https://zapier.com/developer/public-invite/244270/49927ae4c1052fac8e391bf59eef4cc3/';
+
 interface Attrs {
   clientId: string;
   appSlug: string;
@@ -150,7 +156,15 @@ export default class ZapierPanel extends Component<Attrs> {
       <div className="ConnectZapier-setup">
         <div className="ConnectZapier-today">
           <h4>{t('zapier_today_heading')}</h4>
-          <p className="helpText">{t('zapier_today_body')}</p>
+          <ol className="ConnectZapier-steps">
+            <li>{t('zapier_step_key')}</li>
+            <li>{t('zapier_step_open')}</li>
+            <li>{t('zapier_step_build')}</li>
+          </ol>
+          <a className="Button Button--primary ConnectZapier-cta" href={SHARE_URL}
+            target="_blank" rel="noopener noreferrer">
+            <i className="fas fa-external-link-alt" /> {t('zapier_open_btn')}
+          </a>
         </div>
         <p className="helpText">{t('zapier_builder_pending')}</p>
       </div>

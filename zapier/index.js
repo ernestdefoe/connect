@@ -9,6 +9,10 @@ const newDiscussion = require('./triggers/newDiscussion');
 const newPost = require('./triggers/newPost');
 const newUser = require('./triggers/newUser');
 
+// Hidden — these only back the dynamic dropdowns on actions.
+const discussionList = require('./triggers/discussionList');
+const tagList = require('./triggers/tagList');
+
 const createDiscussion = require('./creates/createDiscussion');
 const createPost = require('./creates/createPost');
 
@@ -35,6 +39,8 @@ module.exports = {
     [newDiscussion.key]: newDiscussion,
     [newPost.key]: newPost,
     [newUser.key]: newUser,
+    [discussionList.key]: discussionList,
+    [tagList.key]: tagList,
   },
 
   creates: {

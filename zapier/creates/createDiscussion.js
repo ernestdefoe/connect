@@ -36,11 +36,11 @@ module.exports = {
       { key: 'content', label: 'Content', type: 'text', required: true, helpText: 'The body of the first post. Markdown is supported.' },
       {
         key: 'tags',
-        label: 'Tag IDs',
-        type: 'integer',
+        label: 'Tags',
         list: true,
         required: false,
-        helpText: 'Optional. Numeric tag IDs to apply (requires the Tags extension).',
+        dynamic: 'tag_list.id.name',
+        helpText: 'Optional. Requires the Tags extension — forums without it can leave this empty.',
       },
     ],
     sample: {
