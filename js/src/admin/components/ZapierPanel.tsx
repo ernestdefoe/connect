@@ -27,6 +27,20 @@ const POPULAR: { slug: string; label: string; icon: string }[] = [
   { slug: 'trello', label: 'Trello', icon: 'fab fa-trello' },
 ];
 
+// Connect ships ONE published Zapier integration that every forum shares.
+// That works because the integration authenticates per-site (forum URL + a
+// Connect API key), so a single public app serves every install — an admin
+// never registers anything with Zapier. The Client ID is public by design (it
+// only identifies the integration to the embed), so it lives here in the
+// source rather than in each site's settings.
+//
+// Empty until the integration clears Zapier's public-app review — Zapier only
+// issues a Client ID to published apps. Until then the panel shows the API-key
+// route, which already works. Filling this in is all that's needed to switch
+// the in-page builder on for every forum running Connect.
+const DEFAULT_CLIENT_ID = '';
+const DEFAULT_APP_SLUG = 'connect-for-flarum';
+
 interface Attrs {
   clientId: string;
   appSlug: string;
@@ -46,8 +60,17 @@ export default class ZapierPanel extends Component<Attrs> {
     super.oninit(vnode);
     this.draftClientId = this.attrs.clientId || '';
     this.draftAppSlug = this.attrs.appSlug || '';
-    this.editing = !this.attrs.clientId; // no client id yet → show setup
-    if (this.attrs.clientId) this.loadSdk();
+    this.editing = false; // nothing to configure by default — see clientId()
+    if (this.clientId()) this.loadSdk();
+  }
+
+  /** A site's own integration wins; otherwise Connect's shared published one. */
+  private clientId(): string {
+    return (this.attrs.clientId || DEFAULT_CLIENT_ID).trim();
+  }
+
+  private appSlug(): string {
+    return (this.attrs.appSlug || DEFAULT_APP_SLUG).trim();
   }
 
   /** Inject Zapier's Elements script + stylesheet exactly once. */
@@ -92,12 +115,12 @@ export default class ZapierPanel extends Component<Attrs> {
   }
 
   private appsFilter(): string {
-    // Scope templates to Connect + the picked destination when we know our slug.
-    return [this.attrs.appSlug, this.selected].filter(Boolean).join(',');
+    // Scope templates to Connect + the picked destination.
+    return [this.appSlug(), this.selected].filter(Boolean).join(',');
   }
 
   view() {
-    const configured = !!this.attrs.clientId;
+    const ready = !!this.clientId();
 
     return (
       <div className="ConnectZapier">
@@ -106,34 +129,40 @@ export default class ZapierPanel extends Component<Attrs> {
             <h3><i className="fas fa-bolt" /> {t('zapier_heading')}</h3>
             <p className="helpText">{t('zapier_intro')}</p>
           </div>
-          {configured
-            ? Button.component({ className: 'Button Button--flat', icon: 'fas fa-cog', onclick: () => { this.editing = !this.editing; } }, t('zapier_settings_btn'))
-            : null}
+          {Button.component({ className: 'Button Button--flat', icon: 'fas fa-cog', onclick: () => { this.editing = !this.editing; } }, t('zapier_settings_btn'))}
         </div>
 
-        {this.editing ? this.setup() : null}
-
-        {configured ? this.embed() : (!this.editing ? this.setup() : null)}
+        {/* Nothing to configure normally: Connect ships its own integration. */}
+        {ready ? null : this.gettingStarted()}
+        {this.editing ? this.advanced() : null}
+        {ready ? this.embed() : null}
       </div>
     );
   }
 
   /**
-   * Setup state. Leads with what actually works today (an API key + forum URL is
-   * all Zapier needs), because the embedded experience below is gated on Zapier
-   * issuing a Client ID — which only happens once the integration is published
-   * publicly in their App Directory.
+   * Shown while Connect's shared integration is still awaiting Zapier's public
+   * review. The API-key route below already works, so lead with that rather
+   * than implying the admin has something to set up.
    */
-  private setup(): Mithril.Children {
+  private gettingStarted(): Mithril.Children {
     return (
       <div className="ConnectZapier-setup">
         <div className="ConnectZapier-today">
           <h4>{t('zapier_today_heading')}</h4>
           <p className="helpText">{t('zapier_today_body')}</p>
         </div>
+        <p className="helpText">{t('zapier_builder_pending')}</p>
+      </div>
+    );
+  }
 
-        <h4>{t('zapier_embed_heading')}</h4>
-        <p className="helpText">{t('zapier_embed_requires')}</p>
+  /** Escape hatch for anyone running their own Zapier integration. */
+  private advanced(): Mithril.Children {
+    return (
+      <div className="ConnectZapier-setup">
+        <h4>{t('zapier_advanced_heading')}</h4>
+        <p className="helpText">{t('zapier_advanced_help')}</p>
         <div className="ConnectZapier-setupRow">
           <label>
             {t('zapier_client_id')}
@@ -166,7 +195,7 @@ export default class ZapierPanel extends Component<Attrs> {
     }
 
     const theme = this.theme();
-    const clientId = this.attrs.clientId;
+    const clientId = this.clientId();
 
     return (
       <div className="ConnectZapier-embed">

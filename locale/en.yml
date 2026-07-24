@@ -23,25 +23,27 @@ ernestdefoe-connect:
       Slack, or Discord, add members to a mailing list, log activity to a
       spreadsheet, and more. Set it all up right here, no code needed.
     zapier_settings_btn: Settings
-    zapier_today_heading: Use Zapier today
+    zapier_today_heading: How to connect Zapier
     zapier_today_body: >
-      You don't need anything below to automate with Zapier. Create an API key
-      further down this page, then add this forum in Zapier using your forum's
-      URL and that key. Triggers, actions and webhooks all work right now.
-    zapier_embed_heading: Show the Zap builder on this page (optional)
-    zapier_embed_requires: >
-      Browsing and building Zaps without leaving your forum needs a Client ID,
-      which Zapier only issues once your integration is published as a public app
-      in their App Directory. Until then this section stays empty — everything
-      above still works.
+      Create an API key further down this page, then add your forum in Zapier
+      using your forum's URL and that key. That's it — there's nothing to
+      register and no developer account needed. Triggers, actions and webhooks
+      all work right now.
+    zapier_builder_pending: >
+      Building Zaps without leaving this page is coming as soon as Connect's
+      Zapier integration finishes Zapier's public review. It will switch on by
+      itself — you won't have to configure anything.
+    zapier_advanced_heading: Use your own Zapier integration
+    zapier_advanced_help: >
+      Only needed if you've published your own Zapier integration instead of
+      using Connect's. Leave both fields empty to use Connect's.
     zapier_client_id: Zapier Client ID
     zapier_client_id_placeholder: "e.g. abc123..."
     zapier_app_slug: App slug (optional)
-    zapier_save: Save & connect
+    zapier_save: Save
     zapier_client_id_help: >
       Find it in Zapier's Developer Platform under Embed → Settings → Credentials
-      (public integrations only). The optional app slug scopes the suggested
-      recipes to your integration.
+      (public integrations only).
     zapier_loading: Loading the Zapier experience…
     zapier_recipes: Popular recipes
     zapier_build_anything: Build anything
