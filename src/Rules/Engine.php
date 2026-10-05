@@ -19,6 +19,11 @@ class Engine
 
     public function fire(string $event, array $payload): void
     {
+        // Something a rule just did: see ActionRunner::$running.
+        if (ActionRunner::$running > 0) {
+            return;
+        }
+
         Rule::query()->where('event', $event)->where('enabled', true)->orderBy('position')->get()
             ->each(function (Rule $rule) use ($event, $payload) {
                 if (Conditions::pass($rule->conditions ?? [], $rule->match, $payload)) {

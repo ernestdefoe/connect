@@ -19,8 +19,30 @@ class ActionRunner
     ) {
     }
 
+    /**
+     * How many rules are executing in this process right now.
+     *
+     * 🚨 A rule's own actions must not trigger rules. A "post created → reply"
+     * rule posts a reply, which is a post created, which runs the rule again:
+     * on the default sync queue that recursed inside the original request with
+     * no end. Engine::fire() checks this and stays quiet while a rule is acting.
+     * Webhooks still fire for those posts; only the in-app rules are skipped.
+     */
+    public static int $running = 0;
+
     /** @param array $actions [{type, ...params}] */
     public function run(array $actions, string $event, array $payload, User $actor): void
+    {
+        self::$running++;
+
+        try {
+            $this->runActions($actions, $event, $payload, $actor);
+        } finally {
+            self::$running--;
+        }
+    }
+
+    private function runActions(array $actions, string $event, array $payload, User $actor): void
     {
         $ctx = $this->context($event, $payload);
 
