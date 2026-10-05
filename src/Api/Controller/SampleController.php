@@ -3,6 +3,7 @@
 namespace Ernestdefoe\Connect\Api\Controller;
 
 use Ernestdefoe\Connect\Model\ApiKey;
+use Ernestdefoe\Connect\Webhook\Audience;
 use Ernestdefoe\Connect\Webhook\EventRegistry;
 use Flarum\Discussion\Discussion;
 use Flarum\Http\UrlGenerator;
@@ -18,7 +19,8 @@ use Psr\Http\Server\RequestHandlerInterface;
  * GET /api/connect/samples/{event} — recent real items shaped exactly like the
  * webhook payload for that event. Zapier calls this during Zap setup (performList)
  * so users can map fields against real data without waiting for a live trigger.
- * The shape here MUST match DispatchWebhooks for the same event.
+ * The shape here MUST match DispatchWebhooks for the same event, and it shows
+ * only what the key's user could see, exactly as the live webhooks do.
  */
 class SampleController implements RequestHandlerInterface
 {
@@ -31,9 +33,14 @@ class SampleController implements RequestHandlerInterface
     {
         /** @var ApiKey|null $key */
         $key = $request->getAttribute('connectApiKey');
-        if (! $key) {
+        if (! $key || ! $key->user) {
             return new JsonResponse(['errors' => [['status' => '401', 'code' => 'not_authenticated']]], 401);
         }
+        if (! $key->hasScope('read')) {
+            return new JsonResponse(['errors' => [['status' => '403', 'code' => 'insufficient_scope']]], 403);
+        }
+
+        $viewer = $key->user;
 
         $event = (string) Arr::get($request->getAttribute('routeParameters') ?? [], 'event', '');
         if (! EventRegistry::exists($event)) {
@@ -43,7 +50,7 @@ class SampleController implements RequestHandlerInterface
         $base = rtrim($this->url->to('forum')->base(), '/');
 
         $data = match ($event) {
-            'discussion.created' => Discussion::query()
+            'discussion.created' => Discussion::query()->whereVisibleTo($viewer)
                 ->where('is_private', false)->whereNull('hidden_at')
                 ->latest()->limit(3)->get()
                 ->map(fn (Discussion $d) => [
@@ -62,7 +69,7 @@ class SampleController implements RequestHandlerInterface
                     'createdAt' => optional($d->created_at)->toIso8601String(),
                 ])->values()->all(),
 
-            'post.created' => Post::query()
+            'post.created' => Post::query()->whereVisibleTo($viewer)
                 ->where('type', 'comment')->whereNull('hidden_at')->where('number', '>', 1)
                 ->latest()->limit(3)->get()
                 ->map(fn (Post $p) => [
@@ -72,11 +79,11 @@ class SampleController implements RequestHandlerInterface
                     'authorId' => (int) $p->user_id, 'createdAt' => optional($p->created_at)->toIso8601String(),
                 ])->values()->all(),
 
-            'user.registered' => User::query()
+            'user.registered' => User::query()->whereVisibleTo($viewer)
                 ->latest('joined_at')->limit(3)->get()
                 ->map(fn (User $u) => [
                     'id' => (int) $u->id, 'username' => $u->username, 'name' => $u->display_name,
-                    'email' => $u->email, 'url' => $base . '/u/' . $u->username,
+                    'email' => Audience::canSeeEmail($viewer, $u) ? $u->email : null, 'url' => $base . '/u/' . $u->username,
                     'createdAt' => optional($u->joined_at)->toIso8601String(),
                 ])->values()->all(),
 
