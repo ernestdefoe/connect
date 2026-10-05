@@ -2,6 +2,7 @@
 
 namespace Ernestdefoe\Connect\Rules;
 
+use Ernestdefoe\Connect\Http\SafeUrl;
 use Flarum\Api\Client as ApiClient;
 use Flarum\Discussion\Discussion;
 use Flarum\User\User;
@@ -96,8 +97,8 @@ class ActionRunner
                 break;
 
             case 'call_webhook':
-                if (($url = (string) ($a['url'] ?? '')) && str_starts_with($url, 'https://')) {
-                    (new Http())->post($url, [
+                if (($url = (string) ($a['url'] ?? '')) && ($safe = SafeUrl::options($url)) !== null) {
+                    (new Http())->post($url, $safe + [
                         'json'            => ['event' => $event, 'data' => $payload],
                         'timeout'         => 12,
                         'connect_timeout' => 6,

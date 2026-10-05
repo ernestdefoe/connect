@@ -2,6 +2,7 @@
 
 namespace Ernestdefoe\Connect\Api\Controller;
 
+use Ernestdefoe\Connect\Http\SafeUrl;
 use Ernestdefoe\Connect\Model\ApiKey;
 use Ernestdefoe\Connect\Model\Hook;
 use Ernestdefoe\Connect\Webhook\EventRegistry;
@@ -38,7 +39,8 @@ class SubscribeHookController implements RequestHandlerInterface
         if (! EventRegistry::exists($event)) {
             return new JsonResponse(['errors' => [['status' => '422', 'code' => 'unknown_event', 'detail' => $event]]], 422);
         }
-        if (! filter_var($target, FILTER_VALIDATE_URL) || ! str_starts_with($target, 'https://')) {
+        // https only, and never an address inside the forum's own network.
+        if (! SafeUrl::allowed($target)) {
             return new JsonResponse(['errors' => [['status' => '422', 'code' => 'invalid_target_url']]], 422);
         }
 

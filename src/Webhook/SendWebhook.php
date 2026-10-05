@@ -2,6 +2,7 @@
 
 namespace Ernestdefoe\Connect\Webhook;
 
+use Ernestdefoe\Connect\Http\SafeUrl;
 use Ernestdefoe\Connect\Model\Hook;
 use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
@@ -34,6 +35,12 @@ class SendWebhook implements ShouldQueue
 
     public function handle(): void
     {
+        // Re-checked at send time: the host may resolve somewhere else now.
+        $safe = SafeUrl::options($this->targetUrl);
+        if ($safe === null) {
+            return;
+        }
+
         $body = json_encode([
             'event'   => $this->event,
             'data'    => $this->payload,
@@ -42,7 +49,7 @@ class SendWebhook implements ShouldQueue
         $signature = hash_hmac('sha256', $body, $this->secret);
 
         try {
-            (new Client())->post($this->targetUrl, [
+            (new Client())->post($this->targetUrl, $safe + [
                 'body'    => $body,
                 'headers' => [
                     'Content-Type'        => 'application/json',
