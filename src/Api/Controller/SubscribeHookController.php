@@ -25,6 +25,10 @@ class SubscribeHookController implements RequestHandlerInterface
         if (! $key) {
             return new JsonResponse(['errors' => [['status' => '401', 'code' => 'not_authenticated']]], 401);
         }
+        // Every event is a read of forum content.
+        if (! $key->hasScope('read')) {
+            return new JsonResponse(['errors' => [['status' => '403', 'code' => 'insufficient_scope']]], 403);
+        }
 
         $body   = (array) $request->getParsedBody();
         $event  = (string) Arr::get($body, 'event', '');

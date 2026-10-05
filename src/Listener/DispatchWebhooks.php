@@ -4,6 +4,7 @@ namespace Ernestdefoe\Connect\Listener;
 
 use Ernestdefoe\Connect\Rules\Engine as Rules;
 use Ernestdefoe\Connect\Webhook\Dispatcher;
+use Flarum\Database\AbstractModel;
 use Flarum\Discussion\Event\Started;
 use Flarum\Http\UrlGenerator;
 use Flarum\Post\Event\Posted;
@@ -26,9 +27,9 @@ class DispatchWebhooks
     }
 
     /** Fire a trigger to external webhooks and the in-app Rules engine. */
-    private function trigger(string $event, array $payload): void
+    private function trigger(string $event, array $payload, AbstractModel $subject): void
     {
-        $this->webhooks->fire($event, $payload);
+        $this->webhooks->fire($event, $payload, $subject);
         $this->rules->fire($event, $payload);
     }
 
@@ -52,7 +53,7 @@ class DispatchWebhooks
             'authorId'  => (int) $d->user_id,
             'tagList'   => $this->tagList($d),
             'createdAt' => optional($d->created_at)->toIso8601String(),
-        ]);
+        ], $d);
     }
 
     public function postPosted(Posted $event): void
@@ -72,7 +73,7 @@ class DispatchWebhooks
             'author'       => $p->user?->display_name,
             'authorId'     => (int) $p->user_id,
             'createdAt'    => optional($p->created_at)->toIso8601String(),
-        ]);
+        ], $p);
     }
 
     public function userRegistered(Registered $event): void
@@ -86,7 +87,7 @@ class DispatchWebhooks
             'email'     => $u->email,
             'url'       => $this->base() . '/u/' . $u->username,
             'createdAt' => optional($u->joined_at)->toIso8601String(),
-        ]);
+        ], $u);
     }
 
     /** Comma-joined tag slugs (empty if flarum/tags absent) so conditions can match on tags. */
