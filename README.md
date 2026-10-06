@@ -171,9 +171,11 @@ php flarum connect:key "My key" --scopes=read,write
 - PHP `^8.3`
 - A running queue worker (recommended — webhooks and rule actions are queued)
 
-## Discuss
+## Support
 
-Questions, ideas and release notes: [Connect on discuss.flarum.org](https://discuss.flarum.org/d/39610-connect-for-flarum-2-made-with-ai).
+- **Support forum:** [Connect on ernestdefoe.online](https://ernestdefoe.online/d/76)
+- **Flarum community:** [Connect on discuss.flarum.org](https://discuss.flarum.org/d/39610-connect-for-flarum-2-made-with-ai)
+- **Bug reports:** [GitHub issues](https://github.com/ernestdefoe/connect/issues)
 
 ## License
 
