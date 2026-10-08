@@ -10,16 +10,39 @@ import RuleEditor from './RuleEditor';
 import type { RuleDraft } from './RuleEditor';
 import ZapierPanel from './ZapierPanel';
 
-const t = (key: string, params: Record<string, unknown> = {}) =>
-  app.translator.trans(`ernestdefoe-connect.admin.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-connect.admin.${key}`, params);
 
 interface Key {
-  id: number; label: string; token: string; secret: string; scopes: string[];
-  user: string | null; userId: number; hooks: number; lastUsedAt: string | null;
+  id: number;
+  label: string;
+  token: string;
+  secret: string;
+  scopes: string[];
+  user: string | null;
+  userId: number;
+  hooks: number;
+  lastUsedAt: string | null;
 }
-interface Sub { id: number; event: string; targetUrl: string; keyLabel: string | null; }
-interface Evt { key: string; label: string; }
-interface Rule { id: number; name: string; event: string; enabled: boolean; match: string; conditions: any[]; actions: any[]; runs: number; }
+interface Sub {
+  id: number;
+  event: string;
+  targetUrl: string;
+  keyLabel: string | null;
+}
+interface Evt {
+  key: string;
+  label: string;
+}
+interface Rule {
+  id: number;
+  name: string;
+  event: string;
+  enabled: boolean;
+  match: string;
+  conditions: any[];
+  actions: any[];
+  runs: number;
+}
 
 /**
  * Connect admin page: create/revoke API keys, see which triggers exist, and
@@ -53,14 +76,15 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
   private saveZapier(clientId: string, appSlug: string) {
     this.savingZapier = true;
     m.redraw();
-    app.request({
-      method: 'POST',
-      url: `${this.api()}/settings`,
-      body: {
-        'ernestdefoe-connect.zapier_client_id': clientId,
-        'ernestdefoe-connect.zapier_app_slug': appSlug,
-      },
-    })
+    app
+      .request({
+        method: 'POST',
+        url: `${this.api()}/settings`,
+        body: {
+          'ernestdefoe-connect.zapier_client_id': clientId,
+          'ernestdefoe-connect.zapier_app_slug': appSlug,
+        },
+      })
       .then(() => {
         this.zapierClientId = clientId;
         this.zapierAppSlug = appSlug;
@@ -70,7 +94,11 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
         app.alerts.show({ type: 'success' }, t('zapier_saved'));
         m.redraw();
       })
-      .catch(() => { this.savingZapier = false; app.alerts.show({ type: 'error' }, t('rule_error')); m.redraw(); });
+      .catch(() => {
+        this.savingZapier = false;
+        app.alerts.show({ type: 'error' }, t('rule_error'));
+        m.redraw();
+      });
   }
 
   private api() {
@@ -95,7 +123,10 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
         this.loading = false;
         m.redraw();
       })
-      .catch(() => { this.loading = false; m.redraw(); });
+      .catch(() => {
+        this.loading = false;
+        m.redraw();
+      });
   }
 
   private newRule() {
@@ -108,7 +139,8 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
     m.redraw();
     const isNew = !draft.id;
     const url = isNew ? `${this.api()}/connect/rules` : `${this.api()}/connect/rules/${draft.id}`;
-    app.request<any>({ method: isNew ? 'POST' : 'PATCH', url, body: { data: draft } })
+    app
+      .request<any>({ method: isNew ? 'POST' : 'PATCH', url, body: { data: draft } })
       .then((res) => {
         if (isNew) this.rules.push(res.data);
         else this.rules = this.rules.map((x) => (x.id === res.data.id ? res.data : x));
@@ -117,7 +149,11 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
         app.alerts.show({ type: 'success' }, t('rule_saved'));
         m.redraw();
       })
-      .catch(() => { this.savingRule = false; app.alerts.show({ type: 'error' }, t('rule_error')); m.redraw(); });
+      .catch(() => {
+        this.savingRule = false;
+        app.alerts.show({ type: 'error' }, t('rule_error'));
+        m.redraw();
+      });
   }
 
   private toggleRule(rule: Rule) {
@@ -139,11 +175,12 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
     const scopes = Object.keys(this.newScopes).filter((s) => this.newScopes[s]);
     this.creating = true;
     m.redraw();
-    app.request<any>({
-      method: 'POST',
-      url: `${this.api()}/connect/keys`,
-      body: { data: { label, scopes } },
-    })
+    app
+      .request<any>({
+        method: 'POST',
+        url: `${this.api()}/connect/keys`,
+        body: { data: { label, scopes } },
+      })
       .then((res) => {
         this.keys.unshift(res.data);
         this.revealed[res.data.id] = true; // show the fresh secret immediately
@@ -152,7 +189,11 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
         app.alerts.show({ type: 'success' }, t('key_created'));
         m.redraw();
       })
-      .catch(() => { this.creating = false; app.alerts.show({ type: 'error' }, t('key_error')); m.redraw(); });
+      .catch(() => {
+        this.creating = false;
+        app.alerts.show({ type: 'error' }, t('key_error'));
+        m.redraw();
+      });
   }
 
   private revoke(key: Key) {
@@ -169,7 +210,14 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
   }
 
   content() {
-    if (this.loading) return <div className="ExtensionPage-settings"><div className="container"><LoadingIndicator /></div></div>;
+    if (this.loading)
+      return (
+        <div className="ExtensionPage-settings">
+          <div className="container">
+            <LoadingIndicator />
+          </div>
+        </div>
+      );
 
     return (
       <div className="ExtensionPage-settings ConnectAdmin">
@@ -199,7 +247,9 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
               meta: this.meta || { events: this.events, actions: [], operators: [], groups: [], tags: [] },
               saving: this.savingRule,
               onSave: (r: RuleDraft) => this.saveRule(r),
-              onCancel: () => { this.editing = null; },
+              onCancel: () => {
+                this.editing = null;
+              },
             })
           ) : this.rules.length === 0 ? (
             <div className="ConnectAdmin-emptyRules">
@@ -208,17 +258,47 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
             </div>
           ) : (
             <table className="ConnectAdmin-table">
-              <thead><tr><th>{t('col_rule')}</th><th>{t('col_trigger')}</th><th>{t('col_runs')}</th><th>{t('col_on')}</th><th /></tr></thead>
+              <thead>
+                <tr>
+                  <th>{t('col_rule')}</th>
+                  <th>{t('col_trigger')}</th>
+                  <th>{t('col_runs')}</th>
+                  <th>{t('col_on')}</th>
+                  <th />
+                </tr>
+              </thead>
               <tbody>
                 {this.rules.map((r) => (
                   <tr>
-                    <td><b>{r.name}</b></td>
-                    <td><code>{r.event}</code></td>
+                    <td>
+                      <b>{r.name}</b>
+                    </td>
+                    <td>
+                      <code>{r.event}</code>
+                    </td>
                     <td>{r.runs}</td>
                     <td>{Switch.component({ state: r.enabled, onchange: () => this.toggleRule(r) })}</td>
                     <td className="ConnectAdmin-rowActions">
-                      {Button.component({ className: 'Button Button--icon Button--flat', icon: 'fas fa-pen', onclick: () => { this.editing = { id: r.id, name: r.name, event: r.event, enabled: r.enabled, match: r.match, conditions: r.conditions, actions: r.actions }; } })}
-                      {Button.component({ className: 'Button Button--icon Button--flat ConnectAdmin-revoke', icon: 'fas fa-trash', onclick: () => this.deleteRule(r) })}
+                      {Button.component({
+                        className: 'Button Button--icon Button--flat',
+                        icon: 'fas fa-pen',
+                        onclick: () => {
+                          this.editing = {
+                            id: r.id,
+                            name: r.name,
+                            event: r.event,
+                            enabled: r.enabled,
+                            match: r.match,
+                            conditions: r.conditions,
+                            actions: r.actions,
+                          };
+                        },
+                      })}
+                      {Button.component({
+                        className: 'Button Button--icon Button--flat ConnectAdmin-revoke',
+                        icon: 'fas fa-trash',
+                        onclick: () => this.deleteRule(r),
+                      })}
                     </td>
                   </tr>
                 ))}
@@ -230,12 +310,34 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
           <div className="ConnectAdmin-create">
             <h3>{t('new_key')}</h3>
             <div className="ConnectAdmin-createRow">
-              <input className="FormControl" placeholder={extractText(t('label_placeholder'))}
-                value={this.newLabel} oninput={(e: any) => { this.newLabel = e.target.value; }} />
-              <label className="checkbox"><input type="checkbox" checked={this.newScopes.read}
-                onchange={(e: any) => { this.newScopes.read = e.target.checked; }} /> {t('scope_read')}</label>
-              <label className="checkbox"><input type="checkbox" checked={this.newScopes.write}
-                onchange={(e: any) => { this.newScopes.write = e.target.checked; }} /> {t('scope_write')}</label>
+              <input
+                className="FormControl"
+                placeholder={extractText(t('label_placeholder'))}
+                value={this.newLabel}
+                oninput={(e: any) => {
+                  this.newLabel = e.target.value;
+                }}
+              />
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={this.newScopes.read}
+                  onchange={(e: any) => {
+                    this.newScopes.read = e.target.checked;
+                  }}
+                />{' '}
+                {t('scope_read')}
+              </label>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={this.newScopes.write}
+                  onchange={(e: any) => {
+                    this.newScopes.write = e.target.checked;
+                  }}
+                />{' '}
+                {t('scope_write')}
+              </label>
               {Button.component({ className: 'Button Button--primary', loading: this.creating, onclick: () => this.create() }, t('create'))}
             </div>
           </div>
@@ -246,14 +348,22 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
             <p className="helpText">{t('no_keys')}</p>
           ) : (
             <table className="ConnectAdmin-table">
-              <thead><tr>
-                <th>{t('col_label')}</th><th>{t('col_actsas')}</th><th>{t('col_scopes')}</th>
-                <th>{t('col_creds')}</th><th>{t('col_subs')}</th><th />
-              </tr></thead>
+              <thead>
+                <tr>
+                  <th>{t('col_label')}</th>
+                  <th>{t('col_actsas')}</th>
+                  <th>{t('col_scopes')}</th>
+                  <th>{t('col_creds')}</th>
+                  <th>{t('col_subs')}</th>
+                  <th />
+                </tr>
+              </thead>
               <tbody>
                 {this.keys.map((k) => (
                   <tr>
-                    <td><b>{k.label}</b></td>
+                    <td>
+                      <b>{k.label}</b>
+                    </td>
                     <td>{k.user || '—'}</td>
                     <td>{k.scopes.join(', ')}</td>
                     <td className="ConnectAdmin-creds">
@@ -263,12 +373,24 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
                       </div>
                       <div className="ConnectAdmin-cred">
                         <code>{this.revealed[k.id] ? k.secret : '•••••• ' + t('secret')}</code>
-                        {Button.component({ className: 'Button Button--icon Button--flat', icon: this.revealed[k.id] ? 'far fa-eye-slash' : 'far fa-eye', onclick: () => { this.revealed[k.id] = !this.revealed[k.id]; } })}
+                        {Button.component({
+                          className: 'Button Button--icon Button--flat',
+                          icon: this.revealed[k.id] ? 'far fa-eye-slash' : 'far fa-eye',
+                          onclick: () => {
+                            this.revealed[k.id] = !this.revealed[k.id];
+                          },
+                        })}
                         {Button.component({ className: 'Button Button--icon Button--flat', icon: 'far fa-copy', onclick: () => this.copy(k.secret) })}
                       </div>
                     </td>
                     <td>{k.hooks}</td>
-                    <td>{Button.component({ className: 'Button Button--icon Button--flat ConnectAdmin-revoke', icon: 'fas fa-trash', onclick: () => this.revoke(k) })}</td>
+                    <td>
+                      {Button.component({
+                        className: 'Button Button--icon Button--flat ConnectAdmin-revoke',
+                        icon: 'fas fa-trash',
+                        onclick: () => this.revoke(k),
+                      })}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -278,7 +400,11 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
           {/* Triggers */}
           <h3>{t('triggers_heading')}</h3>
           <ul className="ConnectAdmin-events">
-            {this.events.map((e) => <li><code>{e.key}</code> <span>{e.label}</span></li>)}
+            {this.events.map((e) => (
+              <li>
+                <code>{e.key}</code> <span>{e.label}</span>
+              </li>
+            ))}
           </ul>
 
           {/* Subscriptions */}
@@ -287,10 +413,22 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
             <p className="helpText">{t('no_subs')}</p>
           ) : (
             <table className="ConnectAdmin-table">
-              <thead><tr><th>{t('col_event')}</th><th>{t('col_target')}</th><th>{t('col_key')}</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>{t('col_event')}</th>
+                  <th>{t('col_target')}</th>
+                  <th>{t('col_key')}</th>
+                </tr>
+              </thead>
               <tbody>
                 {this.subs.map((s) => (
-                  <tr><td><code>{s.event}</code></td><td className="ConnectAdmin-target">{s.targetUrl}</td><td>{s.keyLabel || '—'}</td></tr>
+                  <tr>
+                    <td>
+                      <code>{s.event}</code>
+                    </td>
+                    <td className="ConnectAdmin-target">{s.targetUrl}</td>
+                    <td>{s.keyLabel || '—'}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>

@@ -5,8 +5,7 @@ import Button from 'flarum/common/components/Button';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 import type Mithril from 'mithril';
 
-const t = (key: string, params: Record<string, unknown> = {}) =>
-  app.translator.trans(`ernestdefoe-connect.admin.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-connect.admin.${key}`, params);
 
 // Zapier's official embeddable web components ("Zapier Elements"). Loading these
 // gives us the same in-admin browse/create/manage experience Invision ships —
@@ -99,8 +98,15 @@ export default class ZapierPanel extends Component<Attrs> {
     const s = document.createElement('script');
     s.type = 'module';
     s.src = SDK_JS;
-    s.onload = () => { this.sdkLoading = false; this.sdkReady = true; m.redraw(); };
-    s.onerror = () => { this.sdkLoading = false; m.redraw(); };
+    s.onload = () => {
+      this.sdkLoading = false;
+      this.sdkReady = true;
+      m.redraw();
+    };
+    s.onerror = () => {
+      this.sdkLoading = false;
+      m.redraw();
+    };
     document.head.appendChild(s);
   }
 
@@ -133,10 +139,21 @@ export default class ZapierPanel extends Component<Attrs> {
       <div className="ConnectZapier">
         <div className="ConnectZapier-head">
           <div>
-            <h3><i className="fas fa-bolt" /> {t('zapier_heading')}</h3>
+            <h3>
+              <i className="fas fa-bolt" /> {t('zapier_heading')}
+            </h3>
             <p className="helpText">{t('zapier_intro')}</p>
           </div>
-          {Button.component({ className: 'Button Button--flat', icon: 'fas fa-cog', onclick: () => { this.editing = !this.editing; } }, t('zapier_settings_btn'))}
+          {Button.component(
+            {
+              className: 'Button Button--flat',
+              icon: 'fas fa-cog',
+              onclick: () => {
+                this.editing = !this.editing;
+              },
+            },
+            t('zapier_settings_btn')
+          )}
         </div>
 
         {/* Nothing to configure normally: Connect ships its own integration. */}
@@ -162,8 +179,7 @@ export default class ZapierPanel extends Component<Attrs> {
             <li>{t('zapier_step_open')}</li>
             <li>{t('zapier_step_build')}</li>
           </ol>
-          <a className="Button Button--primary ConnectZapier-cta" href={SHARE_URL}
-            target="_blank" rel="noopener noreferrer">
+          <a className="Button Button--primary ConnectZapier-cta" href={SHARE_URL} target="_blank" rel="noopener noreferrer">
             <i className="fas fa-external-link-alt" /> {t('zapier_open_btn')}
           </a>
         </div>
@@ -181,22 +197,38 @@ export default class ZapierPanel extends Component<Attrs> {
         <div className="ConnectZapier-setupRow">
           <label>
             {t('zapier_client_id')}
-            <input className="FormControl" placeholder={extractText(t('zapier_client_id_placeholder'))} value={this.draftClientId}
-              oninput={(e: any) => { this.draftClientId = e.target.value; }} />
+            <input
+              className="FormControl"
+              placeholder={extractText(t('zapier_client_id_placeholder'))}
+              value={this.draftClientId}
+              oninput={(e: any) => {
+                this.draftClientId = e.target.value;
+              }}
+            />
           </label>
           <label>
             {t('zapier_app_slug')}
-            <input className="FormControl" placeholder="connect-for-flarum" value={this.draftAppSlug}
-              oninput={(e: any) => { this.draftAppSlug = e.target.value; }} />
+            <input
+              className="FormControl"
+              placeholder="connect-for-flarum"
+              value={this.draftAppSlug}
+              oninput={(e: any) => {
+                this.draftAppSlug = e.target.value;
+              }}
+            />
           </label>
-          {Button.component({
-            className: 'Button Button--primary', loading: this.attrs.saving,
-            onclick: () => {
-              this.attrs.onSave(this.draftClientId.trim(), this.draftAppSlug.trim());
-              this.editing = false;
-              if (this.draftClientId.trim()) this.loadSdk();
+          {Button.component(
+            {
+              className: 'Button Button--primary',
+              loading: this.attrs.saving,
+              onclick: () => {
+                this.attrs.onSave(this.draftClientId.trim(), this.draftAppSlug.trim());
+                this.editing = false;
+                if (this.draftClientId.trim()) this.loadSdk();
+              },
             },
-          }, t('zapier_save'))}
+            t('zapier_save')
+          )}
         </div>
         <p className="helpText">{t('zapier_client_id_help')}</p>
       </div>
@@ -206,7 +238,11 @@ export default class ZapierPanel extends Component<Attrs> {
   /** The live embedded experience: recipe tiles + templates + full builder. */
   private embed(): Mithril.Children {
     if (!this.sdkReady) {
-      return <div className="ConnectZapier-loading"><LoadingIndicator /> <span>{t('zapier_loading')}</span></div>;
+      return (
+        <div className="ConnectZapier-loading">
+          <LoadingIndicator /> <span>{t('zapier_loading')}</span>
+        </div>
+      );
     }
 
     const theme = this.theme();
@@ -219,7 +255,9 @@ export default class ZapierPanel extends Component<Attrs> {
           {POPULAR.map((p) => (
             <button
               className={'ConnectZapier-tile' + (this.selected === p.slug ? ' is-active' : '')}
-              onclick={() => { this.selected = p.slug; }}
+              onclick={() => {
+                this.selected = p.slug;
+              }}
               type="button"
             >
               <i className={p.icon} />
