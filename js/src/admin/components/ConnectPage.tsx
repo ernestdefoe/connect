@@ -1,4 +1,5 @@
 import app from 'flarum/admin/app';
+import extractText from 'flarum/common/utils/extractText';
 import ExtensionPage from 'flarum/admin/components/ExtensionPage';
 import type { ExtensionPageAttrs } from 'flarum/admin/components/ExtensionPage';
 import Button from 'flarum/common/components/Button';
@@ -9,7 +10,7 @@ import RuleEditor from './RuleEditor';
 import type { RuleDraft } from './RuleEditor';
 import ZapierPanel from './ZapierPanel';
 
-const t = (key: string, params?: Record<string, unknown>) =>
+const t = (key: string, params: Record<string, unknown> = {}) =>
   app.translator.trans(`ernestdefoe-connect.admin.${key}`, params);
 
 interface Key {
@@ -26,7 +27,7 @@ interface Rule { id: number; name: string; event: string; enabled: boolean; matc
  * Zapier/Make, so token + secret are copyable here.
  */
 export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
-  private loading = true;
+  loading = true;
   private keys: Key[] = [];
   private subs: Sub[] = [];
   private events: Evt[] = [];
@@ -229,7 +230,7 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
           <div className="ConnectAdmin-create">
             <h3>{t('new_key')}</h3>
             <div className="ConnectAdmin-createRow">
-              <input className="FormControl" placeholder={t('label_placeholder') as string}
+              <input className="FormControl" placeholder={extractText(t('label_placeholder'))}
                 value={this.newLabel} oninput={(e: any) => { this.newLabel = e.target.value; }} />
               <label className="checkbox"><input type="checkbox" checked={this.newScopes.read}
                 onchange={(e: any) => { this.newScopes.read = e.target.checked; }} /> {t('scope_read')}</label>

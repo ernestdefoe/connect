@@ -1,10 +1,11 @@
 import app from 'flarum/admin/app';
+import extractText from 'flarum/common/utils/extractText';
 import Component from 'flarum/common/Component';
 import Button from 'flarum/common/components/Button';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 import type Mithril from 'mithril';
 
-const t = (key: string, params?: Record<string, unknown>) =>
+const t = (key: string, params: Record<string, unknown> = {}) =>
   app.translator.trans(`ernestdefoe-connect.admin.${key}`, params);
 
 // Zapier's official embeddable web components ("Zapier Elements"). Loading these
@@ -180,7 +181,7 @@ export default class ZapierPanel extends Component<Attrs> {
         <div className="ConnectZapier-setupRow">
           <label>
             {t('zapier_client_id')}
-            <input className="FormControl" placeholder={t('zapier_client_id_placeholder') as string} value={this.draftClientId}
+            <input className="FormControl" placeholder={extractText(t('zapier_client_id_placeholder'))} value={this.draftClientId}
               oninput={(e: any) => { this.draftClientId = e.target.value; }} />
           </label>
           <label>

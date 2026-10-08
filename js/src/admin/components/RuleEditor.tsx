@@ -1,10 +1,11 @@
 import app from 'flarum/admin/app';
+import extractText from 'flarum/common/utils/extractText';
 import Component from 'flarum/common/Component';
 import Button from 'flarum/common/components/Button';
 import Select from 'flarum/common/components/Select';
 import type Mithril from 'mithril';
 
-const t = (key: string, params?: Record<string, unknown>) =>
+const t = (key: string, params: Record<string, unknown> = {}) =>
   app.translator.trans(`ernestdefoe-connect.admin.${key}`, params);
 
 interface Meta {
@@ -46,7 +47,7 @@ export default class RuleEditor extends Component<{ rule: RuleDraft; meta: Meta;
       <div className="ConnectRule-editor">
         <div className="Form-group">
           <label>{t('rule_name')}</label>
-          <input className="FormControl" value={this.r.name} placeholder={t('rule_name_placeholder') as string}
+          <input className="FormControl" value={this.r.name} placeholder={extractText(t('rule_name_placeholder'))}
             oninput={(e: any) => { this.r.name = e.target.value; }} />
         </div>
 
@@ -69,11 +70,11 @@ export default class RuleEditor extends Component<{ rule: RuleDraft; meta: Meta;
           </div>
           {this.r.conditions.map((c, i) => (
             <div className="ConnectRule-row">
-              <input className="FormControl" placeholder={t('rule_field') as string} value={c.field}
+              <input className="FormControl" placeholder={extractText(t('rule_field'))} value={c.field}
                 oninput={(e: any) => { c.field = e.target.value; }} />
               {Select.component({ value: c.op, options: Object.fromEntries(meta.operators.map((o) => [o, t('op_' + o)])), onchange: (v: string) => { c.op = v; } })}
               {['is_empty', 'is_not_empty'].includes(c.op) ? null : (
-                <input className="FormControl" placeholder={t('rule_value') as string} value={c.value}
+                <input className="FormControl" placeholder={extractText(t('rule_value'))} value={c.value}
                   oninput={(e: any) => { c.value = e.target.value; }} />
               )}
               {Button.component({ className: 'Button Button--icon Button--flat', icon: 'fas fa-times', onclick: () => { this.r.conditions.splice(i, 1); } })}
@@ -106,7 +107,7 @@ export default class RuleEditor extends Component<{ rule: RuleDraft; meta: Meta;
   private actionParams(a: Act, meta: Meta): Mithril.Children {
     switch (a.type) {
       case 'reply':
-        return <textarea className="FormControl" rows={2} placeholder={t('action_reply_content') as string}
+        return <textarea className="FormControl" rows={2} placeholder={extractText(t('action_reply_content'))}
           value={a.content || ''} oninput={(e: any) => { a.content = e.target.value; }} />;
       case 'add_tag':
       case 'remove_tag':
