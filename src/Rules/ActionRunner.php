@@ -114,7 +114,11 @@ class ActionRunner
         }
     }
 
-    /** Resolve the discussion/user this event is "about". */
+    /**
+     * Resolve the discussion/user this event is "about".
+     *
+     * @return array{discussionId: int, userId: int}
+     */
     private function context(string $event, array $payload): array
     {
         $isPost = str_starts_with($event, 'post');

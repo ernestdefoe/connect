@@ -16,6 +16,10 @@ use Illuminate\Support\Str;
  * @property ?int $user_id
  * @property ?array $scopes
  * @property ?\Carbon\Carbon $last_used_at
+ * @property ?\Carbon\Carbon $created_at
+ * @property ?\Carbon\Carbon $updated_at
+ * @property-read ?User $user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Hook> $hooks
  */
 class ApiKey extends AbstractModel
 {
@@ -46,11 +50,13 @@ class ApiKey extends AbstractModel
         return empty($scopes) || in_array($scope, $scopes, true) || in_array('*', $scopes, true);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return HasMany<Hook, $this> */
     public function hooks(): HasMany
     {
         return $this->hasMany(Hook::class, 'api_key_id');

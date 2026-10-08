@@ -16,6 +16,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property ?array $actions
  * @property ?int $run_as_user_id
  * @property int $runs
+ * @property ?\Carbon\Carbon $last_run_at
+ * @property ?\Carbon\Carbon $created_at
+ * @property ?\Carbon\Carbon $updated_at
+ * @property-read ?User $runAsUser
  */
 class Rule extends AbstractModel
 {
@@ -28,6 +32,7 @@ class Rule extends AbstractModel
         'last_run_at' => 'datetime',
     ];
 
+    /** @return BelongsTo<User, $this> */
     public function runAsUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'run_as_user_id');

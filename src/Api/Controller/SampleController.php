@@ -69,7 +69,7 @@ class SampleController implements RequestHandlerInterface
                 ->latest()->limit(3)->get()
                 ->map(fn (Post $p) => [
                     'id' => (int) $p->id, 'discussionId' => (int) $p->discussion_id,
-                    'url' => $base . '/d/' . $p->discussion_id . '/' . $p->number,
+                    'url' => $base . '/d/' . $p->discussion_id . '/' . (int) $p->number,
                     'content' => $p->content, 'author' => $p->user?->display_name,
                     'authorId' => (int) $p->user_id, 'createdAt' => optional($p->created_at)->toIso8601String(),
                 ])->values()->all(),
