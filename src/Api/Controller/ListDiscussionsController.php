@@ -27,7 +27,7 @@ class ListDiscussionsController implements RequestHandlerInterface
         }
 
         $query = (array) $request->getQueryParams();
-        $page  = max(0, (int) Arr::get($query, 'page', 0));
+        $page = max(0, (int) Arr::get($query, 'page', 0));
         $limit = min(100, max(1, (int) Arr::get($query, 'limit', 50)));
 
         $data = Discussion::query()
@@ -38,7 +38,7 @@ class ListDiscussionsController implements RequestHandlerInterface
             ->take($limit)
             ->get()
             ->map(fn (Discussion $d) => [
-                'id'    => (int) $d->id,
+                'id' => (int) $d->id,
                 'title' => $d->title,
             ])
             ->values()

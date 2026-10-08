@@ -11,12 +11,12 @@ class ActionRegistry
 {
     /** key => [label, params[], ?requiresClass] */
     public const ACTIONS = [
-        'reply'              => ['Post a reply',            ['content'], null],
-        'add_tag'            => ['Add a tag',               ['tagId'],   \Flarum\Tags\Tag::class],
-        'remove_tag'         => ['Remove a tag',            ['tagId'],   \Flarum\Tags\Tag::class],
-        'add_to_group'       => ['Add user to a group',     ['groupId'], null],
-        'remove_from_group'  => ['Remove user from a group', ['groupId'], null],
-        'call_webhook'       => ['Send to a webhook URL',   ['url'],     null],
+        'reply' => ['Post a reply',            ['content'], null],
+        'add_tag' => ['Add a tag',               ['tagId'],   \Flarum\Tags\Tag::class],
+        'remove_tag' => ['Remove a tag',            ['tagId'],   \Flarum\Tags\Tag::class],
+        'add_to_group' => ['Add user to a group',     ['groupId'], null],
+        'remove_from_group' => ['Remove user from a group', ['groupId'], null],
+        'call_webhook' => ['Send to a webhook URL',   ['url'],     null],
     ];
 
     /** Actions available on this install (optional-dep ones filtered out). */

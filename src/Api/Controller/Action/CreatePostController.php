@@ -35,17 +35,17 @@ class CreatePostController implements RequestHandlerInterface
             return new JsonResponse(['errors' => [['status' => '403', 'code' => 'insufficient_scope']]], 403);
         }
 
-        $body         = (array) $request->getParsedBody();
+        $body = (array) $request->getParsedBody();
         $discussionId = (int) Arr::get($body, 'discussionId', 0);
-        $content      = trim((string) Arr::get($body, 'content', ''));
+        $content = trim((string) Arr::get($body, 'content', ''));
 
         if (! $discussionId || $content === '') {
             return new JsonResponse(['errors' => [['status' => '422', 'code' => 'discussion_and_content_required']]], 422);
         }
 
         $payload = ['data' => [
-            'type'          => 'posts',
-            'attributes'    => ['content' => $content],
+            'type' => 'posts',
+            'attributes' => ['content' => $content],
             'relationships' => ['discussion' => ['data' => ['type' => 'discussions', 'id' => (string) $discussionId]]],
         ]];
 
@@ -56,13 +56,13 @@ class CreatePostController implements RequestHandlerInterface
         }
 
         $created = json_decode((string) $response->getBody(), true);
-        $id      = (int) Arr::get($created, 'data.id');
-        $number  = (int) Arr::get($created, 'data.attributes.number');
+        $id = (int) Arr::get($created, 'data.id');
+        $number = (int) Arr::get($created, 'data.attributes.number');
 
         return new JsonResponse(['data' => [
-            'id'           => $id,
+            'id' => $id,
             'discussionId' => $discussionId,
-            'url'          => rtrim($this->url->to('forum')->base(), '/') . '/d/' . $discussionId . '/' . $number,
+            'url' => rtrim($this->url->to('forum')->base(), '/').'/d/'.$discussionId.'/'.$number,
         ]], 201);
     }
 }

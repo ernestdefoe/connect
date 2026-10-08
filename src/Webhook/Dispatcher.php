@@ -38,7 +38,7 @@ class Dispatcher
         $byUser = [];
 
         foreach ($hooks as $hook) {
-            $key  = $hook->apiKey;
+            $key = $hook->apiKey;
             $user = $key?->user;
 
             if (! $user || ! $key->hasScope('read')) {

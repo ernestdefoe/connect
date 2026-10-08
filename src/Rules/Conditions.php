@@ -27,23 +27,23 @@ class Conditions
 
     private static function one(array $c, array $payload): bool
     {
-        $actual   = $payload[$c['field'] ?? ''] ?? null;
+        $actual = $payload[$c['field'] ?? ''] ?? null;
         $expected = $c['value'] ?? '';
-        $a        = is_string($actual) ? mb_strtolower($actual) : $actual;
-        $e        = is_string($expected) ? mb_strtolower((string) $expected) : $expected;
+        $a = is_string($actual) ? mb_strtolower($actual) : $actual;
+        $e = is_string($expected) ? mb_strtolower((string) $expected) : $expected;
 
         return match ($c['op'] ?? 'equals') {
-            'equals'       => (string) $a === (string) $e,
-            'not_equals'   => (string) $a !== (string) $e,
-            'contains'     => is_string($a) && $e !== '' && str_contains($a, (string) $e),
+            'equals' => (string) $a === (string) $e,
+            'not_equals' => (string) $a !== (string) $e,
+            'contains' => is_string($a) && $e !== '' && str_contains($a, (string) $e),
             'not_contains' => ! (is_string($a) && $e !== '' && str_contains($a, (string) $e)),
-            'starts_with'  => is_string($a) && str_starts_with($a, (string) $e),
+            'starts_with' => is_string($a) && str_starts_with($a, (string) $e),
             'greater_than' => is_numeric($actual) && is_numeric($expected) && $actual > $expected,
-            'less_than'    => is_numeric($actual) && is_numeric($expected) && $actual < $expected,
-            'is_empty'     => $actual === null || $actual === '' || $actual === [],
+            'less_than' => is_numeric($actual) && is_numeric($expected) && $actual < $expected,
+            'is_empty' => $actual === null || $actual === '' || $actual === [],
             'is_not_empty' => ! ($actual === null || $actual === '' || $actual === []),
-            'matches'      => is_string($actual) && @preg_match('/' . str_replace('/', '\/', (string) $expected) . '/i', $actual) === 1,
-            default        => false,
+            'matches' => is_string($actual) && @preg_match('/'.str_replace('/', '\/', (string) $expected).'/i', $actual) === 1,
+            default => false,
         };
     }
 }

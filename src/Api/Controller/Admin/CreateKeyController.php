@@ -22,8 +22,8 @@ class CreateKeyController implements RequestHandlerInterface
         $actor = RequestUtil::getActor($request);
         $actor->assertAdmin();
 
-        $attrs  = (array) Arr::get($request->getParsedBody() ?? [], 'data', []);
-        $label  = trim((string) Arr::get($attrs, 'label', '')) ?: 'API key';
+        $attrs = (array) Arr::get($request->getParsedBody() ?? [], 'data', []);
+        $label = trim((string) Arr::get($attrs, 'label', '')) ?: 'API key';
         $userId = (int) (Arr::get($attrs, 'userId') ?: $actor->id);
         $scopes = array_values(array_filter((array) Arr::get($attrs, 'scopes', ['read', 'write'])));
 
@@ -37,16 +37,16 @@ class CreateKeyController implements RequestHandlerInterface
         $key->load('user');
 
         return new JsonResponse(['data' => [
-            'id'         => (int) $key->id,
-            'label'      => $key->label,
-            'token'      => $key->token,
-            'secret'     => $key->secret,
-            'scopes'     => $key->scopes ?: ['*'],
-            'user'       => $key->user?->username,
-            'userId'     => (int) $key->user_id,
-            'hooks'      => 0,
+            'id' => (int) $key->id,
+            'label' => $key->label,
+            'token' => $key->token,
+            'secret' => $key->secret,
+            'scopes' => $key->scopes ?: ['*'],
+            'user' => $key->user?->username,
+            'userId' => (int) $key->user_id,
+            'hooks' => 0,
             'lastUsedAt' => null,
-            'createdAt'  => optional($key->created_at)->toIso8601String(),
+            'createdAt' => optional($key->created_at)->toIso8601String(),
         ]], 201);
     }
 }

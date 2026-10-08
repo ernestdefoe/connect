@@ -7,7 +7,7 @@ use Flarum\User\User;
 use Illuminate\Console\Command;
 
 /**
- * connect:key {label} {--user=} {--scopes=read,write}
+ * connect:key {label} {--user=} {--scopes=read,write}.
  *
  * Mints a Connect API key from the CLI. Handy for setting up an integration
  * before the admin UI exists; prints the token + secret once (they're the only
@@ -26,6 +26,7 @@ class CreateKeyCommand extends Command
 
         if (! $userId || ! User::query()->find($userId)) {
             $this->error('No valid user to attach the key to. Pass --user=<id>.');
+
             return 1;
         }
 
@@ -35,10 +36,10 @@ class CreateKeyCommand extends Command
         $key->save();
 
         $this->info('Connect API key created.');
-        $this->line('  Token  (Bearer): ' . $key->token);
-        $this->line('  Secret (HMAC):   ' . $key->secret);
-        $this->line('  Acts as user:    ' . $userId);
-        $this->line('  Scopes:          ' . implode(', ', $scopes ?: ['*']));
+        $this->line('  Token  (Bearer): '.$key->token);
+        $this->line('  Secret (HMAC):   '.$key->secret);
+        $this->line('  Acts as user:    '.$userId);
+        $this->line('  Scopes:          '.implode(', ', $scopes ?: ['*']));
 
         return 0;
     }

@@ -31,10 +31,10 @@ class SubscribeHookController implements RequestHandlerInterface
             return new JsonResponse(['errors' => [['status' => '403', 'code' => 'insufficient_scope']]], 403);
         }
 
-        $body   = (array) $request->getParsedBody();
-        $event  = (string) Arr::get($body, 'event', '');
+        $body = (array) $request->getParsedBody();
+        $event = (string) Arr::get($body, 'event', '');
         $target = (string) Arr::get($body, 'targetUrl', '');
-        $zapId  = Arr::get($body, 'zapId');
+        $zapId = Arr::get($body, 'zapId');
 
         if (! EventRegistry::exists($event)) {
             return new JsonResponse(['errors' => [['status' => '422', 'code' => 'unknown_event', 'detail' => $event]]], 422);
@@ -46,7 +46,7 @@ class SubscribeHookController implements RequestHandlerInterface
 
         $hook = Hook::query()->firstOrNew([
             'api_key_id' => $key->id,
-            'event'      => $event,
+            'event' => $event,
             'target_url' => $target,
         ]);
         $hook->zap_id = $zapId ? (string) $zapId : $hook->zap_id;

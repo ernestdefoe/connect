@@ -17,11 +17,11 @@ use Flarum\Extend;
 use Flarum\Http\Middleware\CheckCsrfToken;
 
 return [
-    new Extend\Locales(__DIR__ . '/locale'),
+    new Extend\Locales(__DIR__.'/locale'),
 
     (new Extend\Frontend('admin'))
-        ->js(__DIR__ . '/js/dist/admin.js')
-        ->css(__DIR__ . '/less/admin.less'),
+        ->js(__DIR__.'/js/dist/admin.js')
+        ->css(__DIR__.'/less/admin.less'),
 
     (new Extend\Console())
         ->command(CreateKeyCommand::class),

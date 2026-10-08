@@ -27,16 +27,16 @@ class ListRulesController implements RequestHandlerInterface
     public static function present(Rule $r): array
     {
         return [
-            'id'         => (int) $r->id,
-            'name'       => $r->name,
-            'event'      => $r->event,
-            'enabled'    => (bool) $r->enabled,
-            'match'      => $r->match,
+            'id' => (int) $r->id,
+            'name' => $r->name,
+            'event' => $r->event,
+            'enabled' => (bool) $r->enabled,
+            'match' => $r->match,
             'conditions' => $r->conditions ?: [],
-            'actions'    => $r->actions ?: [],
+            'actions' => $r->actions ?: [],
             'runAsUserId' => (int) $r->run_as_user_id,
-            'runs'       => (int) $r->runs,
-            'lastRunAt'  => optional($r->last_run_at)->toIso8601String(),
+            'runs' => (int) $r->runs,
+            'lastRunAt' => optional($r->last_run_at)->toIso8601String(),
         ];
     }
 }

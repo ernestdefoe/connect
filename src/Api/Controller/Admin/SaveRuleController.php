@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * POST /api/connect/rules  (create) · PATCH /api/connect/rules/{id} (update)
+ * POST /api/connect/rules  (create) · PATCH /api/connect/rules/{id} (update).
  *
  * Sanitises the rule: only a known trigger event, known operators, and known
  * action types survive. Bad actions/conditions are dropped rather than stored.
@@ -26,7 +26,7 @@ class SaveRuleController implements RequestHandlerInterface
         $actor = RequestUtil::getActor($request);
         $actor->assertAdmin();
 
-        $id    = (int) Arr::get($request->getAttribute('routeParameters') ?? [], 'id', 0);
+        $id = (int) Arr::get($request->getAttribute('routeParameters') ?? [], 'id', 0);
         $attrs = (array) Arr::get($request->getParsedBody() ?? [], 'data', []);
 
         $rule = $id ? Rule::query()->find($id) : new Rule();
@@ -78,7 +78,7 @@ class SaveRuleController implements RequestHandlerInterface
         foreach ($in as $c) {
             $c = (array) $c;
             $field = trim((string) ($c['field'] ?? ''));
-            $op    = (string) ($c['op'] ?? '');
+            $op = (string) ($c['op'] ?? '');
             if ($field !== '' && in_array($op, Conditions::OPERATORS, true)) {
                 $out[] = ['field' => $field, 'op' => $op, 'value' => (string) ($c['value'] ?? '')];
             }

@@ -34,7 +34,7 @@ final class SafeUrl
                 '%s:%d:%s',
                 $target['host'],
                 $target['port'],
-                str_contains($ip, ':') ? '[' . $ip . ']' : $ip
+                str_contains($ip, ':') ? '['.$ip.']' : $ip
             )]];
         }
 
@@ -59,10 +59,10 @@ final class SafeUrl
             return null;
         }
 
-        $host    = strtolower(trim($parts['host'], '[]'));
-        $port    = (int) ($parts['port'] ?? 443);
+        $host = strtolower(trim($parts['host'], '[]'));
+        $port = (int) ($parts['port'] ?? 443);
         $literal = filter_var($host, FILTER_VALIDATE_IP) !== false;
-        $ips     = $literal ? [$host] : self::resolve($host);
+        $ips = $literal ? [$host] : self::resolve($host);
 
         if (! $ips) {
             return null;
@@ -106,6 +106,6 @@ final class SafeUrl
         }
 
         // IPv6 multicast, and NAT64 (64:ff9b::/96), which can reach IPv4 loopback.
-        return $bin[0] !== "\xff" && substr($bin, 0, 12) !== "\x00\x64\xff\x9b" . str_repeat("\x00", 8);
+        return $bin[0] !== "\xff" && substr($bin, 0, 12) !== "\x00\x64\xff\x9b".str_repeat("\x00", 8);
     }
 }

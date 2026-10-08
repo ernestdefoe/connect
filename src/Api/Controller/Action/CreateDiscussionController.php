@@ -36,10 +36,10 @@ class CreateDiscussionController implements RequestHandlerInterface
             return new JsonResponse(['errors' => [['status' => '403', 'code' => 'insufficient_scope']]], 403);
         }
 
-        $body    = (array) $request->getParsedBody();
-        $title   = trim((string) Arr::get($body, 'title', ''));
+        $body = (array) $request->getParsedBody();
+        $title = trim((string) Arr::get($body, 'title', ''));
         $content = trim((string) Arr::get($body, 'content', ''));
-        $tagIds  = array_values(array_filter(array_map('intval', (array) Arr::get($body, 'tags', []))));
+        $tagIds = array_values(array_filter(array_map('intval', (array) Arr::get($body, 'tags', []))));
 
         if ($title === '' || $content === '') {
             return new JsonResponse(['errors' => [['status' => '422', 'code' => 'title_and_content_required']]], 422);
@@ -61,15 +61,15 @@ class CreateDiscussionController implements RequestHandlerInterface
         }
 
         $created = json_decode((string) $response->getBody(), true);
-        $id      = (int) Arr::get($created, 'data.id');
+        $id = (int) Arr::get($created, 'data.id');
         // Flarum 2's serialized slug already carries the id prefix (e.g. "97-title").
-        $slug    = (string) Arr::get($created, 'data.attributes.slug');
+        $slug = (string) Arr::get($created, 'data.attributes.slug');
 
         return new JsonResponse(['data' => [
-            'id'    => $id,
+            'id' => $id,
             'title' => (string) Arr::get($created, 'data.attributes.title', $title),
-            'slug'  => $slug,
-            'url'   => rtrim($this->url->to('forum')->base(), '/') . '/d/' . $slug,
+            'slug' => $slug,
+            'url' => rtrim($this->url->to('forum')->base(), '/').'/d/'.$slug,
         ]], 201);
     }
 }

@@ -33,9 +33,9 @@ class MeController implements RequestHandlerInterface
         // to guest by Flarum's own auth, which doesn't recognise Connect keys.
         return new JsonResponse(['data' => ['attributes' => [
             'forumTitle' => (string) $this->settings->get('forum_title'),
-            'user'       => $key->user->username,
-            'userId'     => (int) $key->user->id,
-            'keyLabel'   => $key->label,
+            'user' => $key->user->username,
+            'userId' => (int) $key->user->id,
+            'keyLabel' => $key->label,
         ]]]);
     }
 }

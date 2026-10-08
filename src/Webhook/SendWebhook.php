@@ -42,25 +42,25 @@ class SendWebhook implements ShouldQueue
         }
 
         $body = json_encode([
-            'event'   => $this->event,
-            'data'    => $this->payload,
+            'event' => $this->event,
+            'data' => $this->payload,
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         $signature = hash_hmac('sha256', $body, $this->secret);
 
         try {
             (new Client())->post($this->targetUrl, $safe + [
-                'body'    => $body,
+                'body' => $body,
                 'headers' => [
-                    'Content-Type'        => 'application/json',
-                    'User-Agent'          => 'Flarum-Connect/1.0',
-                    'X-Connect-Event'     => $this->event,
-                    'X-Connect-Delivery'  => (string) Str::uuid(),
-                    'X-Connect-Signature' => 'sha256=' . $signature,
+                    'Content-Type' => 'application/json',
+                    'User-Agent' => 'Flarum-Connect/1.0',
+                    'X-Connect-Event' => $this->event,
+                    'X-Connect-Delivery' => (string) Str::uuid(),
+                    'X-Connect-Signature' => 'sha256='.$signature,
                 ],
-                'timeout'         => 15,
+                'timeout' => 15,
                 'connect_timeout' => 8,
-                'http_errors'     => true,
+                'http_errors' => true,
             ]);
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             $status = $e->getResponse()?->getStatusCode();
@@ -68,6 +68,7 @@ class SendWebhook implements ShouldQueue
             // The subscriber is gone (Zap turned off) — prune and stop.
             if ($status === 410) {
                 Hook::query()->whereKey($this->hookId)->delete();
+
                 return;
             }
 

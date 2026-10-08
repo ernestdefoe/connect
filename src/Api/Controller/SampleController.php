@@ -56,7 +56,7 @@ class SampleController implements RequestHandlerInterface
                 ->latest()->limit(3)->get()
                 ->map(fn (Discussion $d) => [
                     'id' => (int) $d->id, 'title' => $d->title, 'slug' => $d->slug,
-                    'url' => $base . '/d/' . $d->id . '-' . $d->slug,
+                    'url' => $base.'/d/'.$d->id.'-'.$d->slug,
                     'author' => $d->user?->display_name, 'authorId' => (int) $d->user_id,
                     // Keep the sample shape identical to the live webhook (Zapier
                     // requires perform + performList to match).
@@ -69,7 +69,7 @@ class SampleController implements RequestHandlerInterface
                 ->latest()->limit(3)->get()
                 ->map(fn (Post $p) => [
                     'id' => (int) $p->id, 'discussionId' => (int) $p->discussion_id,
-                    'url' => $base . '/d/' . $p->discussion_id . '/' . (int) $p->number,
+                    'url' => $base.'/d/'.$p->discussion_id.'/'.(int) $p->number,
                     'content' => $p->content, 'author' => $p->user?->display_name,
                     'authorId' => (int) $p->user_id, 'createdAt' => optional($p->created_at)->toIso8601String(),
                 ])->values()->all(),
@@ -78,7 +78,7 @@ class SampleController implements RequestHandlerInterface
                 ->latest('joined_at')->limit(3)->get()
                 ->map(fn (User $u) => [
                     'id' => (int) $u->id, 'username' => $u->username, 'name' => $u->display_name,
-                    'email' => Audience::canSeeEmail($viewer, $u) ? $u->email : null, 'url' => $base . '/u/' . $u->username,
+                    'email' => Audience::canSeeEmail($viewer, $u) ? $u->email : null, 'url' => $base.'/u/'.$u->username,
                     'createdAt' => optional($u->joined_at)->toIso8601String(),
                 ])->values()->all(),
 

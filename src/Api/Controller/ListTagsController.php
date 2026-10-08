@@ -35,7 +35,7 @@ class ListTagsController implements RequestHandlerInterface
                 ->orderBy('position')
                 ->get()
                 ->map(fn ($tag) => [
-                    'id'   => (int) $tag->id,
+                    'id' => (int) $tag->id,
                     'name' => $tag->name,
                 ])
                 ->values()

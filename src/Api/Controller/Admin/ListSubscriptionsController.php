@@ -22,12 +22,12 @@ class ListSubscriptionsController implements RequestHandlerInterface
 
         $hooks = Hook::query()->with('apiKey')->latest()->get()
             ->map(fn (Hook $h) => [
-                'id'        => (int) $h->id,
-                'event'     => $h->event,
+                'id' => (int) $h->id,
+                'event' => $h->event,
                 'targetUrl' => $h->target_url,
-                'zapId'     => $h->zap_id,
-                'keyId'     => (int) $h->api_key_id,
-                'keyLabel'  => $h->apiKey?->label,
+                'zapId' => $h->zap_id,
+                'keyId' => (int) $h->api_key_id,
+                'keyLabel' => $h->apiKey?->label,
                 'createdAt' => optional($h->created_at)->toIso8601String(),
             ])->values()->all();
 

@@ -26,7 +26,7 @@ class ApiKey extends AbstractModel
     protected $table = 'connect_api_keys';
     protected $guarded = [];
     protected $casts = [
-        'scopes'       => 'array',
+        'scopes' => 'array',
         'last_used_at' => 'datetime',
     ];
 
@@ -34,11 +34,11 @@ class ApiKey extends AbstractModel
     public static function build(string $label, ?int $userId, array $scopes = []): self
     {
         $key = new self();
-        $key->label   = mb_substr($label, 0, 100) ?: 'API key';
-        $key->token   = 'ck_' . Str::random(48);
-        $key->secret  = 'cs_' . Str::random(48);
+        $key->label = mb_substr($label, 0, 100) ?: 'API key';
+        $key->token = 'ck_'.Str::random(48);
+        $key->secret = 'cs_'.Str::random(48);
         $key->user_id = $userId;
-        $key->scopes  = $scopes;
+        $key->scopes = $scopes;
 
         return $key;
     }

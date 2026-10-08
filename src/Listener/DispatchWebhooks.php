@@ -47,13 +47,13 @@ class DispatchWebhooks
         $d = $event->discussion;
 
         $this->trigger('discussion.created', [
-            'id'        => (int) $d->id,
-            'title'     => $d->title,
-            'slug'      => $d->slug,
-            'url'       => $this->base() . '/d/' . $d->id . '-' . $d->slug,
-            'author'    => $d->user?->display_name,
-            'authorId'  => (int) $d->user_id,
-            'tagList'   => self::tagList($d),
+            'id' => (int) $d->id,
+            'title' => $d->title,
+            'slug' => $d->slug,
+            'url' => $this->base().'/d/'.$d->id.'-'.$d->slug,
+            'author' => $d->user?->display_name,
+            'authorId' => (int) $d->user_id,
+            'tagList' => self::tagList($d),
             'createdAt' => optional($d->created_at)->toIso8601String(),
         ], $d);
     }
@@ -68,13 +68,13 @@ class DispatchWebhooks
         }
 
         $this->trigger('post.created', [
-            'id'           => (int) $p->id,
+            'id' => (int) $p->id,
             'discussionId' => (int) $p->discussion_id,
-            'url'          => $this->base() . '/d/' . $p->discussion_id . '/' . $p->number,
-            'content'      => $p->content,
-            'author'       => $p->user?->display_name,
-            'authorId'     => (int) $p->user_id,
-            'createdAt'    => optional($p->created_at)->toIso8601String(),
+            'url' => $this->base().'/d/'.$p->discussion_id.'/'.$p->number,
+            'content' => $p->content,
+            'author' => $p->user?->display_name,
+            'authorId' => (int) $p->user_id,
+            'createdAt' => optional($p->created_at)->toIso8601String(),
         ], $p);
     }
 
@@ -83,11 +83,11 @@ class DispatchWebhooks
         $u = $event->user;
 
         $this->trigger('user.registered', [
-            'id'        => (int) $u->id,
-            'username'  => $u->username,
-            'name'      => $u->display_name,
-            'email'     => $u->email,
-            'url'       => $this->base() . '/u/' . $u->username,
+            'id' => (int) $u->id,
+            'username' => $u->username,
+            'name' => $u->display_name,
+            'email' => $u->email,
+            'url' => $this->base().'/u/'.$u->username,
             'createdAt' => optional($u->joined_at)->toIso8601String(),
         ], $u);
     }
@@ -100,6 +100,7 @@ class DispatchWebhooks
         if (! $discussion->isRelation('tags')) {
             return '';
         }
+
         try {
             $tags = $discussion->getAttribute('tags');
 

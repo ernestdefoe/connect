@@ -25,14 +25,14 @@ class AuthenticateWithConnectKey implements MiddlewareInterface
 {
     /** route name => scope the key needs (null = any valid key) */
     public const ROUTES = [
-        'connect.me'                  => null,
-        'connect.hooks.subscribe'     => 'read',
-        'connect.hooks.unsubscribe'   => null,
-        'connect.samples'             => 'read',
-        'connect.discussions'         => 'read',
-        'connect.tags'                => 'read',
+        'connect.me' => null,
+        'connect.hooks.subscribe' => 'read',
+        'connect.hooks.unsubscribe' => null,
+        'connect.samples' => 'read',
+        'connect.discussions' => 'read',
+        'connect.tags' => 'read',
         'connect.actions.discussions' => 'write',
-        'connect.actions.posts'       => 'write',
+        'connect.actions.posts' => 'write',
     ];
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface

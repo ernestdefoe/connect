@@ -26,9 +26,9 @@ class Rule extends AbstractModel
     protected $table = 'connect_rules';
     protected $guarded = [];
     protected $casts = [
-        'enabled'     => 'boolean',
-        'conditions'  => 'array',
-        'actions'     => 'array',
+        'enabled' => 'boolean',
+        'conditions' => 'array',
+        'actions' => 'array',
         'last_run_at' => 'datetime',
     ];
 

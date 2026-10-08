@@ -13,8 +13,8 @@ class EventRegistry
     /** key => [label, scope] */
     public const EVENTS = [
         'discussion.created' => ['New discussion', 'read'],
-        'post.created'       => ['New reply',      'read'],
-        'user.registered'    => ['New user',       'read'],
+        'post.created' => ['New reply',      'read'],
+        'user.registered' => ['New user',       'read'],
     ];
 
     public static function all(): array

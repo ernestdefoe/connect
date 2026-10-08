@@ -34,11 +34,11 @@ class MetaController implements RequestHandlerInterface
         }
 
         return new JsonResponse(['data' => [
-            'events'    => EventRegistry::all(),
-            'actions'   => ActionRegistry::available(),
+            'events' => EventRegistry::all(),
+            'actions' => ActionRegistry::available(),
             'operators' => Conditions::OPERATORS,
-            'groups'    => $groups,
-            'tags'      => $tags,
+            'groups' => $groups,
+            'tags' => $tags,
         ]]);
     }
 }

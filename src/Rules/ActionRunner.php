@@ -50,7 +50,7 @@ class ActionRunner
 
         foreach ($actions as $action) {
             $action = (array) $action;
-            $type   = $action['type'] ?? '';
+            $type = $action['type'] ?? '';
 
             if (! ActionRegistry::exists($type)) {
                 continue;
@@ -104,10 +104,10 @@ class ActionRunner
             case 'call_webhook':
                 if (($url = (string) ($a['url'] ?? '')) && ($safe = SafeUrl::options($url)) !== null) {
                     $this->http->post($url, $safe + [
-                        'json'            => ['event' => $event, 'data' => $payload],
-                        'timeout'         => 12,
+                        'json' => ['event' => $event, 'data' => $payload],
+                        'timeout' => 12,
                         'connect_timeout' => 6,
-                        'http_errors'     => false,
+                        'http_errors' => false,
                     ]);
                 }
                 break;
@@ -126,7 +126,7 @@ class ActionRunner
 
         return [
             'discussionId' => $isPost ? (int) ($payload['discussionId'] ?? 0) : (int) ($payload['id'] ?? 0),
-            'userId'       => $isUser ? (int) ($payload['id'] ?? 0) : (int) ($payload['authorId'] ?? 0),
+            'userId' => $isUser ? (int) ($payload['id'] ?? 0) : (int) ($payload['authorId'] ?? 0),
         ];
     }
 }
