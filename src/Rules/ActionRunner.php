@@ -16,7 +16,8 @@ use GuzzleHttp\Client as Http;
 class ActionRunner
 {
     public function __construct(
-        protected ApiClient $api
+        protected ApiClient $api,
+        protected Http $http
     ) {
     }
 
@@ -56,14 +57,14 @@ class ActionRunner
             }
 
             try {
-                $this->one($type, $action, $ctx, $payload, $actor);
+                $this->one($type, $action, $event, $ctx, $payload, $actor);
             } catch (\Throwable $e) {
                 // One failed action shouldn't abort the rest of the rule.
             }
         }
     }
 
-    private function one(string $type, array $a, array $ctx, array $payload, User $actor): void
+    private function one(string $type, array $a, string $event, array $ctx, array $payload, User $actor): void
     {
         switch ($type) {
             case 'reply':
@@ -102,7 +103,7 @@ class ActionRunner
 
             case 'call_webhook':
                 if (($url = (string) ($a['url'] ?? '')) && ($safe = SafeUrl::options($url)) !== null) {
-                    (new Http())->post($url, $safe + [
+                    $this->http->post($url, $safe + [
                         'json'            => ['event' => $event, 'data' => $payload],
                         'timeout'         => 12,
                         'connect_timeout' => 6,
