@@ -5,11 +5,13 @@ namespace Ernestdefoe\Connect\Listener;
 use Ernestdefoe\Connect\Rules\Engine as Rules;
 use Ernestdefoe\Connect\Webhook\Dispatcher;
 use Flarum\Database\AbstractModel;
+use Flarum\Discussion\Discussion;
 use Flarum\Discussion\Event\Started;
 use Flarum\Http\UrlGenerator;
 use Flarum\Post\Event\Posted;
 use Flarum\User\Event\Registered;
 use Illuminate\Contracts\Events\Dispatcher as Events;
+use Illuminate\Support\Collection;
 
 /**
  * Bridges Flarum's domain events to Connect trigger events, shaping a small,
@@ -51,7 +53,7 @@ class DispatchWebhooks
             'url'       => $this->base() . '/d/' . $d->id . '-' . $d->slug,
             'author'    => $d->user?->display_name,
             'authorId'  => (int) $d->user_id,
-            'tagList'   => $this->tagList($d),
+            'tagList'   => self::tagList($d),
             'createdAt' => optional($d->created_at)->toIso8601String(),
         ], $d);
     }
@@ -91,13 +93,17 @@ class DispatchWebhooks
     }
 
     /** Comma-joined tag slugs (empty if flarum/tags absent) so conditions can match on tags. */
-    private function tagList($discussion): string
+    public static function tagList(Discussion $discussion): string
     {
-        if (! method_exists($discussion, 'tags')) {
+        // flarum/tags adds `tags` through a relation resolver, which
+        // method_exists() cannot see: ask Eloquent instead.
+        if (! $discussion->isRelation('tags')) {
             return '';
         }
         try {
-            return $discussion->tags->pluck('slug')->implode(',');
+            $tags = $discussion->getAttribute('tags');
+
+            return $tags instanceof Collection ? $tags->pluck('slug')->implode(',') : '';
         } catch (\Throwable $e) {
             return '';
         }

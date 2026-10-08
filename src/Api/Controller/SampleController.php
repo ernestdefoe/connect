@@ -2,6 +2,7 @@
 
 namespace Ernestdefoe\Connect\Api\Controller;
 
+use Ernestdefoe\Connect\Listener\DispatchWebhooks;
 use Ernestdefoe\Connect\Model\ApiKey;
 use Ernestdefoe\Connect\Webhook\Audience;
 use Ernestdefoe\Connect\Webhook\EventRegistry;
@@ -59,13 +60,7 @@ class SampleController implements RequestHandlerInterface
                     'author' => $d->user?->display_name, 'authorId' => (int) $d->user_id,
                     // Keep the sample shape identical to the live webhook (Zapier
                     // requires perform + performList to match).
-                    'tagList' => method_exists($d, 'tags') ? (function () use ($d) {
-                        try {
-                            return $d->tags->pluck('slug')->implode(',');
-                        } catch (\Throwable $e) {
-                            return '';
-                        }
-                    })() : '',
+                    'tagList' => DispatchWebhooks::tagList($d),
                     'createdAt' => optional($d->created_at)->toIso8601String(),
                 ])->values()->all(),
 

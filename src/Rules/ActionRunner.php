@@ -80,8 +80,12 @@ class ActionRunner
             case 'remove_tag':
                 if ($ctx['discussionId'] && ($tagId = (int) ($a['tagId'] ?? 0))) {
                     $d = Discussion::query()->find($ctx['discussionId']);
-                    if ($d && method_exists($d, 'tags')) {
-                        $type === 'add_tag' ? $d->tags()->syncWithoutDetaching([$tagId]) : $d->tags()->detach($tagId);
+                    // flarum/tags adds this relation through a resolver, which
+                    // method_exists() cannot see: ask Eloquent for it instead.
+                    $relation = $d?->relationResolver(Discussion::class, 'tags');
+                    if ($d && $relation) {
+                        $tags = $relation($d);
+                        $type === 'add_tag' ? $tags->syncWithoutDetaching([$tagId]) : $tags->detach($tagId);
                     }
                 }
                 break;
