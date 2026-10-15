@@ -402,7 +402,7 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
           <ul className="ConnectAdmin-events">
             {this.events.map((e) => (
               <li>
-                <code>{e.key}</code> <span>{e.label}</span>
+                <code>{e.key}</code> <span>{t('events.' + e.key.replace('.', '_'))}</span>
               </li>
             ))}
           </ul>

@@ -7,6 +7,7 @@ use Ernestdefoe\Connect\Rules\ActionRegistry;
 use Ernestdefoe\Connect\Rules\Conditions;
 use Ernestdefoe\Connect\Webhook\EventRegistry;
 use Flarum\Http\RequestUtil;
+use Flarum\Locale\TranslatorInterface;
 use Illuminate\Support\Arr;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
@@ -21,6 +22,11 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 class SaveRuleController implements RequestHandlerInterface
 {
+    public function __construct(
+        protected TranslatorInterface $translator
+    ) {
+    }
+
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $actor = RequestUtil::getActor($request);
@@ -35,9 +41,9 @@ class SaveRuleController implements RequestHandlerInterface
         }
 
         if (array_key_exists('name', $attrs)) {
-            $rule->name = mb_substr(trim((string) $attrs['name']), 0, 150) ?: 'Untitled rule';
+            $rule->name = mb_substr(trim((string) $attrs['name']), 0, 150) ?: $this->translator->trans('ernestdefoe-connect.api.untitled_rule');
         } elseif (! $rule->exists) {
-            $rule->name = 'Untitled rule';
+            $rule->name = $this->translator->trans('ernestdefoe-connect.api.untitled_rule');
         }
 
         if (array_key_exists('event', $attrs)) {

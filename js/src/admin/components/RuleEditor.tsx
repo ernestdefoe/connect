@@ -84,7 +84,7 @@ export default class RuleEditor extends Component<{
           <label>{t('rule_when')}</label>
           {Select.component({
             value: this.r.event,
-            options: Object.fromEntries(meta.events.map((e) => [e.key, e.label])),
+            options: Object.fromEntries(meta.events.map((e) => [e.key, extractText(t('events.' + e.key.replace('.', '_')))])),
             onchange: (v: string) => {
               this.r.event = v;
             },
@@ -160,7 +160,7 @@ export default class RuleEditor extends Component<{
             <div className="ConnectRule-row ConnectRule-actionRow">
               {Select.component({
                 value: a.type,
-                options: Object.fromEntries(meta.actions.map((x) => [x.key, x.label])),
+                options: Object.fromEntries(meta.actions.map((x) => [x.key, extractText(t('actions.' + x.key))])),
                 onchange: (v: string) => {
                   this.r.actions[i] = { type: v };
                 },
