@@ -62,7 +62,11 @@ class SaveRuleController implements RequestHandlerInterface
             $rule->match = in_array($attrs['match'], ['all', 'any'], true) ? $attrs['match'] : 'all';
         }
         if (array_key_exists('conditions', $attrs)) {
-            $rule->conditions = $this->cleanConditions((array) $attrs['conditions']);
+            $conditions = $this->cleanConditions((array) $attrs['conditions']);
+            if ($conditions === null) {
+                return new JsonResponse(['errors' => [['status' => '422', 'code' => 'invalid_pattern']]], 422);
+            }
+            $rule->conditions = $conditions;
         }
         if (array_key_exists('actions', $attrs)) {
             $rule->actions = $this->cleanActions((array) $attrs['actions']);
@@ -78,15 +82,20 @@ class SaveRuleController implements RequestHandlerInterface
         return new JsonResponse(['data' => ListRulesController::present($rule)], $id ? 200 : 201);
     }
 
-    private function cleanConditions(array $in): array
+    /** @return ?array null when a "matches" value is not a valid pattern */
+    private function cleanConditions(array $in): ?array
     {
         $out = [];
         foreach ($in as $c) {
             $c = (array) $c;
             $field = trim((string) ($c['field'] ?? ''));
             $op = (string) ($c['op'] ?? '');
+            $value = (string) ($c['value'] ?? '');
             if ($field !== '' && in_array($op, Conditions::OPERATORS, true)) {
-                $out[] = ['field' => $field, 'op' => $op, 'value' => (string) ($c['value'] ?? '')];
+                if ($op === 'matches' && ! Conditions::validPattern($value)) {
+                    return null;
+                }
+                $out[] = ['field' => $field, 'op' => $op, 'value' => $value];
             }
         }
 

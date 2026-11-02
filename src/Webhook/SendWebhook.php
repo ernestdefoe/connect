@@ -33,7 +33,7 @@ class SendWebhook implements ShouldQueue
     ) {
     }
 
-    public function handle(): void
+    public function handle(Client $http): void
     {
         // Re-checked at send time: the host may resolve somewhere else now.
         $safe = SafeUrl::options($this->targetUrl);
@@ -49,7 +49,7 @@ class SendWebhook implements ShouldQueue
         $signature = hash_hmac('sha256', $body, $this->secret);
 
         try {
-            (new Client())->post($this->targetUrl, $safe + [
+            $http->post($this->targetUrl, $safe + [
                 'body' => $body,
                 'headers' => [
                     'Content-Type' => 'application/json',

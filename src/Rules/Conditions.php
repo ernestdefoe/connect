@@ -14,6 +14,25 @@ class Conditions
         'starts_with', 'greater_than', 'less_than', 'is_empty', 'is_not_empty', 'matches',
     ];
 
+    /** Longest pattern the "matches" operator accepts. */
+    public const MAX_PATTERN = 500;
+
+    /**
+     * Whether an admin's "matches" value compiles as a pattern. Checked when the
+     * rule is saved, so a typo is reported instead of the condition silently
+     * never matching. Runaway backtracking is bounded by PCRE's backtrack_limit:
+     * preg_match() then returns false, which counts as "no match".
+     */
+    public static function validPattern(string $value): bool
+    {
+        return mb_strlen($value) <= self::MAX_PATTERN && @preg_match(self::pattern($value), '') !== false;
+    }
+
+    private static function pattern(string $value): string
+    {
+        return '/'.str_replace('/', '\/', $value).'/i';
+    }
+
     public static function pass(array $conditions, string $match, array $payload): bool
     {
         if (empty($conditions)) {
@@ -42,7 +61,8 @@ class Conditions
             'less_than' => is_numeric($actual) && is_numeric($expected) && $actual < $expected,
             'is_empty' => $actual === null || $actual === '' || $actual === [],
             'is_not_empty' => ! ($actual === null || $actual === '' || $actual === []),
-            'matches' => is_string($actual) && @preg_match('/'.str_replace('/', '\/', (string) $expected).'/i', $actual) === 1,
+            // Validated on save (validPattern); @ only covers rules saved before that check.
+            'matches' => is_string($actual) && @preg_match(self::pattern((string) $expected), $actual) === 1,
             default => false,
         };
     }

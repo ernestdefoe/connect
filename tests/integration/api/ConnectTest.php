@@ -275,4 +275,55 @@ class ConnectTest extends TestCase
         $this->assertSame('post.created', $payload['event']);
         $this->assertSame(1, $payload['data']['discussionId']);
     }
+
+    #[Test]
+    public function a_reply_rule_does_not_trigger_itself()
+    {
+        // The rule's own reply is a new post: it must not run the rule again.
+        $this->prepareDatabase(['connect_rules' => [
+            ['id' => 1, 'name' => 'Thanks', 'event' => 'post.created', 'enabled' => true, 'match' => 'all', 'position' => 0, 'run_as_user_id' => 1, 'runs' => 0,
+                'conditions' => json_encode([]), 'actions' => json_encode([['type' => 'reply', 'content' => 'Thanks for replying']])],
+        ]]);
+
+        [$status, $body] = $this->withKey('POST', '/api/connect/actions/posts', self::MEMBER_KEY, ['discussionId' => 1, 'content' => 'Hi']);
+        $this->assertSame(201, $status, json_encode($body));
+
+        $this->assertSame(1, (int) $this->database()->table('connect_rules')->where('id', 1)->value('runs'));
+        $this->assertSame(3, $this->database()->table('posts')->where('discussion_id', 1)->count(), 'Original post, the reply, and exactly one rule reply');
+    }
+
+    #[Test]
+    public function a_rule_with_a_broken_pattern_is_not_saved()
+    {
+        $rule = ['name' => 'Bad', 'event' => 'post.created', 'conditions' => [['field' => 'content', 'op' => 'matches', 'value' => '(unclosed']]];
+
+        [$status, $body] = $this->asUser('POST', '/api/connect/rules', 1, ['data' => $rule]);
+        $this->assertSame(422, $status, json_encode($body));
+        $this->assertSame('invalid_pattern', $body['errors'][0]['code']);
+
+        $rule['conditions'][0]['value'] = '^(sale|wanted)/\\d+';
+        [$status, $body] = $this->asUser('POST', '/api/connect/rules', 1, ['data' => $rule]);
+        $this->assertSame(201, $status, json_encode($body));
+    }
+
+    #[Test]
+    public function a_failed_rule_action_is_logged()
+    {
+        $this->prepareDatabase(['connect_rules' => [
+            ['id' => 1, 'name' => 'Ping', 'event' => 'post.created', 'enabled' => true, 'match' => 'all', 'position' => 0, 'run_as_user_id' => 1, 'runs' => 0,
+                'conditions' => json_encode([]), 'actions' => json_encode([['type' => 'call_webhook', 'url' => 'https://93.184.216.34/hook'], ['type' => 'add_tag', 'tagId' => 2]])],
+        ]]);
+
+        $stack = HandlerStack::create(new MockHandler([new \RuntimeException('Connection refused')]));
+        $this->app()->getContainer()->instance(Http::class, new Http(['handler' => $stack]));
+        $log = new \Monolog\Handler\TestHandler();
+        $this->app()->getContainer()->instance(\Psr\Log\LoggerInterface::class, new \Monolog\Logger('test', [$log]));
+
+        [$status, $body] = $this->withKey('POST', '/api/connect/actions/posts', self::MEMBER_KEY, ['discussionId' => 1, 'content' => 'Ping me']);
+        $this->assertSame(201, $status, json_encode($body));
+
+        $this->assertTrue($log->hasWarningThatContains('Rule action call_webhook failed on post.created: Connection refused'));
+        $this->assertTrue($this->database()->table('discussion_tag')->where('discussion_id', 1)->where('tag_id', 2)->exists(), 'The next action still ran');
+        $this->assertSame(1, (int) $this->database()->table('connect_rules')->where('id', 1)->value('runs'));
+    }
 }

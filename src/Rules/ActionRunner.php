@@ -7,6 +7,7 @@ use Flarum\Api\Client as ApiClient;
 use Flarum\Discussion\Discussion;
 use Flarum\User\User;
 use GuzzleHttp\Client as Http;
+use Psr\Log\LoggerInterface;
 
 /**
  * Executes a rule's actions against a fired event. The target (which discussion,
@@ -17,7 +18,8 @@ class ActionRunner
 {
     public function __construct(
         protected ApiClient $api,
-        protected Http $http
+        protected Http $http,
+        protected LoggerInterface $log
     ) {
     }
 
@@ -29,6 +31,10 @@ class ActionRunner
      * on the default sync queue that recursed inside the original request with
      * no end. Engine::fire() checks this and stays quiet while a rule is acting.
      * Webhooks still fire for those posts; only the in-app rules are skipped.
+     *
+     * This also holds on a real (async) queue: the actions run inside the
+     * RunRule job, and Flarum dispatches Posted/Started synchronously in that
+     * same worker process, so Engine::fire() sees the counter there too.
      */
     public static int $running = 0;
 
@@ -59,7 +65,9 @@ class ActionRunner
             try {
                 $this->one($type, $action, $event, $ctx, $payload, $actor);
             } catch (\Throwable $e) {
-                // One failed action shouldn't abort the rest of the rule.
+                // One failed action shouldn't abort the rest of the rule, but
+                // the forum's log should say which one failed and why.
+                $this->log->warning("[connect] Rule action {$type} failed on {$event}: ".$e->getMessage(), ['exception' => $e]);
             }
         }
     }
