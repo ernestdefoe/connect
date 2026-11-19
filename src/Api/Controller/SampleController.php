@@ -50,10 +50,14 @@ class SampleController implements RequestHandlerInterface
 
         $base = rtrim($this->url->to('forum')->base(), '/');
 
+        // flarum/tags adds `tags` through a relation resolver: load it with the
+        // author only when that relation exists (see DispatchWebhooks::tagList).
+        $discussionRelations = (new Discussion())->isRelation('tags') ? ['user', 'tags'] : ['user'];
+
         $data = match ($event) {
             'discussion.created' => Discussion::query()->whereVisibleTo($viewer)
                 ->where('is_private', false)->whereNull('hidden_at')
-                ->latest()->limit(3)->get()
+                ->with($discussionRelations)->latest()->limit(3)->get()
                 ->map(fn (Discussion $d) => [
                     'id' => (int) $d->id, 'title' => $d->title, 'slug' => $d->slug,
                     'url' => $base.'/d/'.$d->id.'-'.$d->slug,
@@ -66,7 +70,7 @@ class SampleController implements RequestHandlerInterface
 
             'post.created' => Post::query()->whereVisibleTo($viewer)
                 ->where('type', 'comment')->whereNull('hidden_at')->where('number', '>', 1)
-                ->latest()->limit(3)->get()
+                ->with('user')->latest()->limit(3)->get()
                 ->map(fn (Post $p) => [
                     'id' => (int) $p->id, 'discussionId' => (int) $p->discussion_id,
                     'url' => $base.'/d/'.$p->discussion_id.'/'.(int) $p->number,

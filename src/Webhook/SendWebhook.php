@@ -4,10 +4,8 @@ namespace Ernestdefoe\Connect\Webhook;
 
 use Ernestdefoe\Connect\Http\SafeUrl;
 use Ernestdefoe\Connect\Model\Hook;
+use Flarum\Queue\AbstractJob;
 use GuzzleHttp\Client;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Str;
 
 /**
@@ -16,11 +14,8 @@ use Illuminate\Support\Str;
  * receivers can verify authenticity. A 410 means the subscriber (e.g. a turned-
  * off Zap) is gone, so we delete the hook and stop delivering to it.
  */
-class SendWebhook implements ShouldQueue
+class SendWebhook extends AbstractJob
 {
-    use Queueable;
-    use InteractsWithQueue;
-
     public int $tries = 3;
     public int $backoff = 10;
 

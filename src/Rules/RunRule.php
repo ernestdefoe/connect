@@ -4,21 +4,16 @@ namespace Ernestdefoe\Connect\Rules;
 
 use Carbon\Carbon;
 use Ernestdefoe\Connect\Model\Rule;
+use Flarum\Queue\AbstractJob;
 use Flarum\User\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
 /**
  * Runs one rule against one fired event, off the request path. Re-checks the
  * rule is still enabled and its conditions still pass (state can change between
  * enqueue and run), resolves the actor, executes the actions, and bumps counters.
  */
-class RunRule implements ShouldQueue
+class RunRule extends AbstractJob
 {
-    use Queueable;
-    use InteractsWithQueue;
-
     public int $tries = 2;
 
     public function __construct(

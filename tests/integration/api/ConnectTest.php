@@ -326,4 +326,72 @@ class ConnectTest extends TestCase
         $this->assertTrue($this->database()->table('discussion_tag')->where('discussion_id', 1)->where('tag_id', 2)->exists(), 'The next action still ran');
         $this->assertSame(1, (int) $this->database()->table('connect_rules')->where('id', 1)->value('runs'));
     }
+
+    #[Test]
+    public function samples_load_authors_and_tags_in_a_fixed_number_of_queries()
+    {
+        $this->app();
+        $queries = 0;
+        $this->database()->listen(function () use (&$queries) {
+            $queries++;
+        });
+        $count = function (string $event) use (&$queries): int {
+            $queries = 0;
+            [$status, $body] = $this->withKey('GET', "/api/connect/samples/$event", self::ADMIN_KEY);
+            $this->assertSame(200, $status, json_encode($body));
+
+            return $queries;
+        };
+        // One reply, so both samples start with one author to load.
+        $this->database()->table('posts')->insert(['id' => 20, 'discussion_id' => 1, 'number' => 2, 'created_at' => Carbon::now(), 'user_id' => 1, 'type' => 'comment', 'content' => '<t><p>Mine</p></t>']);
+        $count('discussion.created'); // warm up: first-request boot queries
+
+        $one = ['discussion.created' => $count('discussion.created'), 'post.created' => $count('post.created')];
+
+        // Two more discussions and replies, each by a different author.
+        $now = Carbon::now();
+        $this->database()->table('users')->insert([
+            ['id' => 3, 'username' => 'third', 'email' => 'third@machine.local', 'is_email_confirmed' => 1, 'password' => 'x', 'joined_at' => $now],
+            ['id' => 4, 'username' => 'fourth', 'email' => 'fourth@machine.local', 'is_email_confirmed' => 1, 'password' => 'x', 'joined_at' => $now],
+        ]);
+        foreach ([3, 4] as $user) {
+            $this->database()->table('discussions')->insert(['id' => $user + 1, 'title' => "By $user", 'slug' => "by-$user", 'created_at' => $now, 'user_id' => $user, 'comment_count' => 2]);
+            $this->database()->table('posts')->insert([
+                ['id' => $user + 1, 'discussion_id' => $user + 1, 'number' => 1, 'created_at' => $now, 'user_id' => $user, 'type' => 'comment', 'content' => '<t><p>Hi</p></t>'],
+                ['id' => $user + 10, 'discussion_id' => $user + 1, 'number' => 2, 'created_at' => $now, 'user_id' => $user, 'type' => 'comment', 'content' => '<t><p>Reply</p></t>'],
+            ]);
+            $this->database()->table('discussions')->where('id', $user + 1)->update(['first_post_id' => $user + 1]);
+            $this->database()->table('discussion_tag')->insert(['discussion_id' => $user + 1, 'tag_id' => 2]);
+        }
+
+        $this->assertSame($one, ['discussion.created' => $count('discussion.created'), 'post.created' => $count('post.created')]);
+    }
+
+    #[Test]
+    public function a_subscribed_hook_gets_a_signed_delivery_and_a_410_removes_it()
+    {
+        $this->prepareDatabase(['connect_hooks' => [
+            ['id' => 1, 'api_key_id' => 3, 'event' => 'post.created', 'target_url' => 'https://93.184.216.34/zap', 'failures' => 0],
+        ]]);
+
+        $sent = [];
+        $stack = HandlerStack::create(new MockHandler([new Response(200), new Response(410)]));
+        $stack->push(Middleware::history($sent));
+        $this->app()->getContainer()->instance(Http::class, new Http(['handler' => $stack]));
+
+        [$status, $body] = $this->withKey('POST', '/api/connect/actions/posts', self::MEMBER_KEY, ['discussionId' => 1, 'content' => 'First']);
+        $this->assertSame(201, $status, json_encode($body));
+
+        $this->assertCount(1, $sent);
+        $request = $sent[0]['request'];
+        $this->assertSame('post.created', $request->getHeaderLine('X-Connect-Event'));
+        $this->assertSame('sha256='.hash_hmac('sha256', (string) $request->getBody(), 'cs_r'), $request->getHeaderLine('X-Connect-Signature'));
+        $this->assertSame(1, $this->database()->table('connect_hooks')->count());
+
+        // The admin's reply, so flood control doesn't hold the member's second one.
+        [$status] = $this->withKey('POST', '/api/connect/actions/posts', self::ADMIN_KEY, ['discussionId' => 1, 'content' => 'Second']);
+        $this->assertSame(201, $status);
+        $this->assertCount(2, $sent);
+        $this->assertSame(0, $this->database()->table('connect_hooks')->count(), 'A 410 removes the subscription');
+    }
 }

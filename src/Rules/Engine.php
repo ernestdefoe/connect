@@ -3,7 +3,7 @@
 namespace Ernestdefoe\Connect\Rules;
 
 use Ernestdefoe\Connect\Model\Rule;
-use Illuminate\Contracts\Bus\Dispatcher as Bus;
+use Illuminate\Contracts\Queue\Queue;
 
 /**
  * On each fired trigger, finds the enabled rules for that event whose conditions
@@ -13,7 +13,7 @@ use Illuminate\Contracts\Bus\Dispatcher as Bus;
 class Engine
 {
     public function __construct(
-        protected Bus $bus
+        protected Queue $queue
     ) {
     }
 
@@ -27,7 +27,7 @@ class Engine
         Rule::query()->where('event', $event)->where('enabled', true)->orderBy('position')->get()
             ->each(function (Rule $rule) use ($event, $payload) {
                 if (Conditions::pass($rule->conditions ?? [], $rule->match, $payload)) {
-                    $this->bus->dispatch(new RunRule($rule->id, $event, $payload));
+                    $this->queue->push(new RunRule($rule->id, $event, $payload));
                 }
             });
     }

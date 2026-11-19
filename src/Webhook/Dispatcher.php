@@ -4,7 +4,7 @@ namespace Ernestdefoe\Connect\Webhook;
 
 use Ernestdefoe\Connect\Model\Hook;
 use Flarum\Database\AbstractModel;
-use Illuminate\Contracts\Bus\Dispatcher as Bus;
+use Illuminate\Contracts\Queue\Queue;
 
 /**
  * Fans a single fired event out to every subscribed target URL. Each delivery is
@@ -17,7 +17,7 @@ use Illuminate\Contracts\Bus\Dispatcher as Bus;
 class Dispatcher
 {
     public function __construct(
-        protected Bus $bus
+        protected Queue $queue
     ) {
     }
 
@@ -53,7 +53,7 @@ class Dispatcher
                 continue;
             }
 
-            $this->bus->dispatch(new SendWebhook(
+            $this->queue->push(new SendWebhook(
                 $hook->id,
                 $hook->target_url,
                 $key->secret,
