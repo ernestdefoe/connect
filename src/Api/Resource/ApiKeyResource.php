@@ -10,8 +10,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Tobyz\JsonApiServer\Context;
 
 /**
- * Admin-only Connect API keys (/api/connect-keys). The token and secret are
- * included because the admin pastes them into Zapier, Make and the like. A key
+ * Admin-only Connect API keys (/api/connect-keys). Only a hash of each Bearer
+ * key is stored: the raw key is in the response that creates it and nowhere
+ * else, and lists show its prefix. The signing secret stays visible to admins,
+ * who paste it into the receiving service. A key
  * acts as its user; it defaults to the admin who created it.
  *
  * @extends AbstractDatabaseResource<ApiKey>
@@ -46,7 +48,8 @@ class ApiKeyResource extends AbstractDatabaseResource
     {
         return [
             Schema\Str::make('label')->writableOnCreate()->requiredOnCreate()->maxLength(100),
-            Schema\Str::make('token'),
+            Schema\Str::make('token')->nullable()->get(fn (ApiKey $key) => $key->plainToken),
+            Schema\Str::make('tokenPrefix')->property('token_prefix'),
             Schema\Str::make('secret'),
             Schema\Arr::make('scopes')
                 ->writableOnCreate()

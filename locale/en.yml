@@ -15,6 +15,7 @@ ernestdefoe-connect:
     confirm_revoke: "Revoke “{label}”? Any automation using it will stop immediately."
     copied: Copied to clipboard.
     secret: secret
+    token_once: Copy this key now. For your security it is stored hashed and is never shown again.
 
     # Zapier embed
     zapier_heading: Automations powered by Zapier

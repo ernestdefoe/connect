@@ -2,7 +2,6 @@
 
 namespace Ernestdefoe\Connect\Middleware;
 
-use Carbon\Carbon;
 use Ernestdefoe\Connect\Model\ApiKey;
 use Ernestdefoe\Connect\Webhook\Audience;
 use Flarum\Http\RequestUtil;
@@ -45,7 +44,7 @@ class AuthenticateWithConnectKey implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        $key = ApiKey::query()->where('token', $token)->with('user')->first();
+        $key = ApiKey::findByToken($token);
 
         if (! $key || ! $key->user) {
             return $handler->handle($request); // the endpoint answers 401
@@ -60,7 +59,7 @@ class AuthenticateWithConnectKey implements MiddlewareInterface
             return $this->refuse('insufficient_scope');
         }
 
-        ApiKey::query()->whereKey($key->id)->update(['last_used_at' => Carbon::now()]);
+        $key->touchLastUsed();
 
         return $handler->handle(RequestUtil::withActor($request, $key->user)
             ->withAttribute('connectApiKey', $key)

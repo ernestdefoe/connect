@@ -53,10 +53,10 @@ class ConnectTest extends TestCase
             ],
             'discussion_tag' => [['discussion_id' => 1, 'tag_id' => 1], ['discussion_id' => 2, 'tag_id' => 1], ['discussion_id' => 3, 'tag_id' => 3]],
             'connect_api_keys' => [
-                ['id' => 1, 'label' => 'Admin', 'token' => self::ADMIN_KEY, 'secret' => 'cs_a', 'user_id' => 1, 'scopes' => json_encode([])],
-                ['id' => 2, 'label' => 'Member', 'token' => self::MEMBER_KEY, 'secret' => 'cs_m', 'user_id' => 2, 'scopes' => json_encode([])],
-                ['id' => 3, 'label' => 'Read', 'token' => self::READ_KEY, 'secret' => 'cs_r', 'user_id' => 2, 'scopes' => json_encode(['read'])],
-                ['id' => 4, 'label' => 'Write', 'token' => self::WRITE_KEY, 'secret' => 'cs_w', 'user_id' => 2, 'scopes' => json_encode(['write'])],
+                ['id' => 1, 'label' => 'Admin', 'token' => hash('sha256', self::ADMIN_KEY), 'secret' => 'cs_a', 'user_id' => 1, 'scopes' => json_encode([])],
+                ['id' => 2, 'label' => 'Member', 'token' => hash('sha256', self::MEMBER_KEY), 'secret' => 'cs_m', 'user_id' => 2, 'scopes' => json_encode([])],
+                ['id' => 3, 'label' => 'Read', 'token' => hash('sha256', self::READ_KEY), 'secret' => 'cs_r', 'user_id' => 2, 'scopes' => json_encode(['read'])],
+                ['id' => 4, 'label' => 'Write', 'token' => hash('sha256', self::WRITE_KEY), 'secret' => 'cs_w', 'user_id' => 2, 'scopes' => json_encode(['write'])],
             ],
         ]);
     }
@@ -227,7 +227,9 @@ class ConnectTest extends TestCase
     {
         [$status, $body] = $this->asUser('POST', '/api/connect-keys', 1, ['data' => ['type' => 'connect-keys', 'attributes' => ['label' => 'Zapier', 'userId' => 2, 'scopes' => ['read', 'admin']]]]);
         $this->assertSame(201, $status, json_encode($body));
-        $this->assertStringStartsWith('ck_', $body['data']['attributes']['token']);
+        $token = $body['data']['attributes']['token'];
+        $this->assertStringStartsWith('ck_', $token, 'The new key is shown once, in full');
+        $this->assertSame(substr($token, 0, 10), $body['data']['attributes']['tokenPrefix']);
         $this->assertStringStartsWith('cs_', $body['data']['attributes']['secret']);
         $this->assertSame('normal', $body['data']['attributes']['user']);
         $this->assertSame(['read'], $body['data']['attributes']['scopes'], 'Unknown scopes are dropped');
@@ -243,6 +245,54 @@ class ConnectTest extends TestCase
         [$status, $body] = $this->asUser('GET', '/api/connect-keys', 1);
         $this->assertSame(200, $status);
         $this->assertCount(6, $body['data']);
+        $this->assertSame([null], array_values(array_unique(array_column(array_column($body['data'], 'attributes'), 'token'))), 'Lists never show a key');
+
+        // Only the hash is stored, and the raw key works.
+        $this->assertFalse($this->database()->table('connect_api_keys')->where('token', $token)->exists());
+        $this->assertTrue($this->database()->table('connect_api_keys')->where('token', hash('sha256', $token))->exists());
+        [$status, $body] = $this->withKey('GET', '/api/connect/me', $token);
+        $this->assertSame([200, 'normal'], [$status, $body['data']['attributes']['user'] ?? null]);
+    }
+
+    #[Test]
+    public function keys_stored_before_hashing_keep_working_after_the_migration()
+    {
+        $raw = 'ck_stored_in_clear_by_connect_1_0_x_000000000000000000';
+        $this->prepareDatabase(['connect_api_keys' => [
+            ['id' => 9, 'label' => 'Old Zap', 'token' => $raw, 'secret' => 'cs_o', 'user_id' => 2, 'scopes' => json_encode([])],
+        ]]);
+        $this->app();
+
+        $migration = include __DIR__.'/../../../migrations/2026_11_19_000001_hash_connect_api_key_tokens.php';
+        $migration['up']($this->database()->getSchemaBuilder());
+        $migration['up']($this->database()->getSchemaBuilder()); // a second run changes nothing
+
+        $row = $this->database()->table('connect_api_keys')->where('id', 9)->first();
+        $this->assertSame([hash('sha256', $raw), 'ck_stored_'], [$row->token, $row->token_prefix]);
+        $this->assertSame(hash('sha256', self::ADMIN_KEY), $this->database()->table('connect_api_keys')->where('id', 1)->value('token'), 'Hashed keys are left alone');
+
+        [$status, $body] = $this->withKey('GET', '/api/connect/me', $raw);
+        $this->assertSame([200, 'Old Zap'], [$status, $body['data']['attributes']['keyLabel'] ?? null]);
+    }
+
+    #[Test]
+    public function a_key_records_its_last_use_at_most_once_a_minute()
+    {
+        $this->withKey('GET', '/api/connect/me', self::MEMBER_KEY);
+        $first = $this->database()->table('connect_api_keys')->where('id', 2)->value('last_used_at');
+        $this->assertNotNull($first);
+
+        $updates = 0;
+        $this->database()->listen(function ($query) use (&$updates) {
+            $updates += (int) str_starts_with(strtolower($query->sql), 'update');
+        });
+        $this->withKey('GET', '/api/connect/me', self::MEMBER_KEY);
+        $this->assertSame(0, $updates, 'A second call within the minute writes nothing');
+
+        $this->database()->table('connect_api_keys')->where('id', 2)->update(['last_used_at' => Carbon::now()->subMinutes(2)]);
+        $updates = 0;
+        $this->withKey('GET', '/api/connect/me', self::MEMBER_KEY);
+        $this->assertSame(1, $updates);
     }
 
     #[Test]

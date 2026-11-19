@@ -6,12 +6,14 @@ use Flarum\Database\AbstractModel;
 use Flarum\User\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 /**
  * @property int $id
  * @property string $label
- * @property string $token
+ * @property string $token SHA-256 of the raw Bearer key
+ * @property ?string $token_prefix
  * @property string $secret
  * @property ?int $user_id
  * @property ?array $scopes
@@ -27,7 +29,13 @@ class ApiKey extends AbstractModel
     /** The scopes a key can carry; none means all of them. */
     public const SCOPES = ['read', 'write'];
 
+    /** Characters of the raw key kept in clear, so an admin can tell keys apart. */
+    public const PREFIX_LENGTH = 10;
+
     protected $fillable = ['label', 'user_id', 'scopes'];
+
+    /** The raw Bearer key, set only on the request that minted it: only its hash is stored. */
+    public ?string $plainToken = null;
     protected $casts = [
         'scopes' => 'array',
         'last_used_at' => 'datetime',
@@ -44,13 +52,39 @@ class ApiKey extends AbstractModel
         return $key->mint();
     }
 
-    /** Give the key a fresh Bearer token and HMAC signing secret. */
+    /**
+     * Give the key a fresh Bearer token and HMAC signing secret. The token is
+     * stored as a SHA-256 hash (it is 48 random characters, so a fast hash is
+     * enough), the raw value is kept on the model for this request only. The
+     * secret stays readable: Connect needs it to sign every webhook.
+     */
     public function mint(): static
     {
-        $this->token = 'ck_'.Str::random(48);
+        $this->plainToken = 'ck_'.Str::random(48);
+        $this->token = self::hash($this->plainToken);
+        $this->token_prefix = substr($this->plainToken, 0, self::PREFIX_LENGTH);
         $this->secret = 'cs_'.Str::random(48);
 
         return $this;
+    }
+
+    public static function hash(string $token): string
+    {
+        return hash('sha256', $token);
+    }
+
+    /** The key a raw Bearer token belongs to, if any. */
+    public static function findByToken(string $token): ?self
+    {
+        return self::query()->where('token', self::hash($token))->with('user')->first();
+    }
+
+    /** Record a use, at most once a minute, so a busy Zap isn't an UPDATE per call. */
+    public function touchLastUsed(): void
+    {
+        if ($this->last_used_at === null || $this->last_used_at->lt(Carbon::now()->subMinute())) {
+            self::query()->whereKey($this->id)->update(['last_used_at' => Carbon::now()]);
+        }
     }
 
     public function hasScope(string $scope): bool

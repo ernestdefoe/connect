@@ -19,7 +19,9 @@ const rows = (document: any) => (document.data || []).map(row);
 interface Key {
   id: number;
   label: string;
-  token: string;
+  /** The raw key, present only in the response that created it. */
+  token: string | null;
+  tokenPrefix: string | null;
   secret: string;
   scopes: string[];
   user: string | null;
@@ -52,7 +54,7 @@ interface Rule {
 /**
  * Connect admin page: create/revoke API keys, see which triggers exist, and
  * watch live subscriptions. The keys carry the secrets an admin pastes into
- * Zapier/Make, so token + secret are copyable here.
+ * Zapier/Make: a new key is shown in full once, then by its prefix only.
  */
 export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
   loading = true;
@@ -396,10 +398,19 @@ export default class ConnectPage extends ExtensionPage<ExtensionPageAttrs> {
         <td>{k.user || '—'}</td>
         <td>{k.scopes.join(', ')}</td>
         <td className="ConnectAdmin-creds">
-          <div className="ConnectAdmin-cred">
-            <code>{k.token}</code>
-            {Button.component({ className: 'Button Button--icon Button--flat', icon: 'far fa-copy', onclick: () => this.copy(k.token) })}
-          </div>
+          {k.token ? (
+            [
+              <div className="ConnectAdmin-cred">
+                <code>{k.token}</code>
+                {Button.component({ className: 'Button Button--icon Button--flat', icon: 'far fa-copy', onclick: () => this.copy(k.token!) })}
+              </div>,
+              <p className="ConnectAdmin-once">{t('token_once')}</p>,
+            ]
+          ) : (
+            <div className="ConnectAdmin-cred">
+              <code>{(k.tokenPrefix || 'ck_') + '…'}</code>
+            </div>
+          )}
           <div className="ConnectAdmin-cred">
             <code>{this.revealed[k.id] ? k.secret : '•••••• ' + t('secret')}</code>
             {Button.component({

@@ -11,8 +11,8 @@ use Illuminate\Console\Command;
  * connect:key {label} {--user=} {--scopes=read,write}.
  *
  * Mints a Connect API key from the CLI. Handy for scripting an integration
- * setup; prints the token + secret once (they're the only
- * time the raw values are shown outside the DB).
+ * setup; prints the token + secret once (the token is
+ * never shown again: only its hash is stored).
  */
 class CreateKeyCommand extends Command
 {
@@ -37,7 +37,7 @@ class CreateKeyCommand extends Command
         $key->save();
 
         $this->info('Connect API key created.');
-        $this->line('  Token  (Bearer): '.$key->token);
+        $this->line('  Token  (Bearer): '.$key->plainToken);
         $this->line('  Secret (HMAC):   '.$key->secret);
         $this->line('  Acts as user:    '.$userId);
         $this->line('  Scopes:          '.implode(', ', $scopes ?: ['*']));

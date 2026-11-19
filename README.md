@@ -168,6 +168,10 @@ php flarum connect:key "My key" --scopes=read,write
 
 The key acts as the forum's first administrator unless you pass `--user=<id>`.
 
+A key is shown in full only once, when it's created (in the admin page or by
+this command). Connect stores just a SHA-256 hash of it, so copy it then; the
+admin page lists keys by their first characters.
+
 ---
 
 ## Requirements
