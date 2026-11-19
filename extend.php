@@ -9,8 +9,6 @@
 namespace Ernestdefoe\Connect;
 
 use Ernestdefoe\Connect\Api;
-use Ernestdefoe\Connect\Api\Controller;
-use Ernestdefoe\Connect\Api\Controller\Admin;
 use Ernestdefoe\Connect\Console\CreateKeyCommand;
 use Ernestdefoe\Connect\Listener\DispatchWebhooks;
 use Ernestdefoe\Connect\Middleware\AuthenticateWithConnectKey;
@@ -42,24 +40,7 @@ return [
     new Extend\ApiResource(Api\Resource\RuleResource::class),
     new Extend\ApiResource(Api\Resource\HookResource::class),
 
-    // The integration routes speak the plain JSON that Zapier, Make and REST
-    // Hooks expect (not JSON:API), and authenticate with a Connect key, so they
-    // are request handlers rather than resources.
-    (new Extend\Routes('api'))
-        // Connection test + auth (Zapier auth.test)
-        ->get('/connect/me', 'connect.me', Controller\MeController::class)
-        // REST Hooks: subscribe / unsubscribe
-        ->post('/connect/hooks', 'connect.hooks.subscribe', Controller\SubscribeHookController::class)
-        ->delete('/connect/hooks/{id}', 'connect.hooks.unsubscribe', Controller\UnsubscribeHookController::class)
-        // performList sample data for the Zap-setup step
-        ->get('/connect/samples/{event}', 'connect.samples', Controller\SampleController::class)
-        // Pickers behind Zapier's dynamic dropdowns (choose a discussion/tag by
-        // name instead of typing a numeric ID)
-        ->get('/connect/discussions', 'connect.discussions', Controller\ListDiscussionsController::class)
-        ->get('/connect/tags', 'connect.tags', Controller\ListTagsController::class)
-        // Actions (Creates)
-        ->post('/connect/actions/discussions', 'connect.actions.discussions', Controller\Action\CreateDiscussionController::class)
-        ->post('/connect/actions/posts', 'connect.actions.posts', Controller\Action\CreatePostController::class)
-        // What the admin Rules builder can offer on this forum (admin-gated)
-        ->get('/connect/meta', 'connect.meta', Admin\MetaController::class),
+    // The integration routes for Zapier, Make, IFTTT, n8n and REST Hooks
+    // (/api/connect/…): plain JSON, authenticated with a Connect key.
+    new Extend\ApiResource(Api\Resource\ConnectResource::class),
 ];

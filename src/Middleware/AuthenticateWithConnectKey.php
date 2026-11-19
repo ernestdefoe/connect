@@ -5,6 +5,7 @@ namespace Ernestdefoe\Connect\Middleware;
 use Carbon\Carbon;
 use Ernestdefoe\Connect\Model\ApiKey;
 use Ernestdefoe\Connect\Webhook\Audience;
+use Flarum\Http\RequestUtil;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,7 +14,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Recognises `Authorization: Bearer ck_…` on Connect's integration routes and
- * hands the key to the controller, which acts as the key's user.
+ * makes the key's user the actor there, with the key itself on the request.
  *
  * A key is only honoured on the routes below, and only with the scope each one
  * needs. Anywhere else in the API the header is ignored and the request is
@@ -47,7 +48,7 @@ class AuthenticateWithConnectKey implements MiddlewareInterface
         $key = ApiKey::query()->where('token', $token)->with('user')->first();
 
         if (! $key || ! $key->user) {
-            return $handler->handle($request); // the controller answers 401
+            return $handler->handle($request); // the endpoint answers 401
         }
 
         if (Audience::suspended($key->user)) {
@@ -61,7 +62,7 @@ class AuthenticateWithConnectKey implements MiddlewareInterface
 
         ApiKey::query()->whereKey($key->id)->update(['last_used_at' => Carbon::now()]);
 
-        return $handler->handle($request
+        return $handler->handle(RequestUtil::withActor($request, $key->user)
             ->withAttribute('connectApiKey', $key)
             // Token-authenticated calls carry no session CSRF token; this is why
             // the middleware runs before CheckCsrfToken (see extend.php).

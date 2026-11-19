@@ -136,6 +136,13 @@ class ConnectTest extends TestCase
         [$status] = $this->asUser('GET', '/api/connect/me', null);
         $this->assertSame(401, $status);
 
+        // Signed in, but without a key: the integration routes still refuse.
+        [$status, $body] = $this->asUser('GET', '/api/connect/me', 2);
+        $this->assertSame([401, 'not_authenticated'], [$status, $body['errors'][0]['code'] ?? null]);
+
+        [$status, $body] = $this->withKey('GET', '/api/connect/samples/nothing.happened', self::MEMBER_KEY);
+        $this->assertSame([404, 'unknown_event'], [$status, $body['errors'][0]['code'] ?? null]);
+
         // A core route with a key is handled as if the key were not there.
         [$status] = $this->withKey('POST', '/api/discussions', self::ADMIN_KEY, ['data' => ['type' => 'discussions', 'attributes' => ['title' => 'x', 'content' => 'y']]]);
         $this->assertSame(400, $status, 'No CSRF bypass, no actor');
