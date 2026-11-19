@@ -33,6 +33,22 @@ class Conditions
         return '/'.str_replace('/', '\/', $value).'/i';
     }
 
+    /** Keep only conditions with a field and a known operator, as {field, op, value}. */
+    public static function clean(array $in): array
+    {
+        $out = [];
+        foreach ($in as $c) {
+            $c = (array) $c;
+            $field = trim((string) ($c['field'] ?? ''));
+            $op = (string) ($c['op'] ?? '');
+            if ($field !== '' && in_array($op, self::OPERATORS, true)) {
+                $out[] = ['field' => $field, 'op' => $op, 'value' => (string) ($c['value'] ?? '')];
+            }
+        }
+
+        return $out;
+    }
+
     public static function pass(array $conditions, string $match, array $payload): bool
     {
         if (empty($conditions)) {

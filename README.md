@@ -115,7 +115,10 @@ valid  ⇔  signature == 'sha256=' + hmac_sha256(rawRequestBody, keySecret)
 ## REST API
 
 All routes are under your forum's API root (`/api`). Authenticate with
-`Authorization: Bearer ck_…`.
+`Authorization: Bearer ck_…`. They speak the plain JSON that Zapier, Make and
+REST Hooks expect rather than JSON:API, and a key works only on these routes.
+(The admin page's keys, rules and subscriptions are ordinary Flarum JSON:API
+resources: `/connect-keys`, `/connect-rules`, `/connect-subscriptions`, admin only.)
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -162,6 +165,8 @@ else works on a stock forum.
 ```bash
 php flarum connect:key "My key" --scopes=read,write
 ```
+
+The key acts as the forum's first administrator unless you pass `--user=<id>`.
 
 ---
 

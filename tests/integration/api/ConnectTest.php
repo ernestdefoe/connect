@@ -85,14 +85,15 @@ class ConnectTest extends TestCase
     public static function adminRoutes(): array
     {
         return [
-            'list keys' => ['GET', '/api/connect/keys'],
-            'create key' => ['POST', '/api/connect/keys'],
-            'delete key' => ['DELETE', '/api/connect/keys/2'],
-            'subscriptions' => ['GET', '/api/connect/subscriptions'],
-            'events' => ['GET', '/api/connect/events'],
+            'list keys' => ['GET', '/api/connect-keys'],
+            'create key' => ['POST', '/api/connect-keys'],
+            'delete key' => ['DELETE', '/api/connect-keys/2'],
+            'subscriptions' => ['GET', '/api/connect-subscriptions'],
             'meta' => ['GET', '/api/connect/meta'],
-            'list rules' => ['GET', '/api/connect/rules'],
-            'create rule' => ['POST', '/api/connect/rules'],
+            'list rules' => ['GET', '/api/connect-rules'],
+            'create rule' => ['POST', '/api/connect-rules'],
+            'update rule' => ['PATCH', '/api/connect-rules/1'],
+            'delete rule' => ['DELETE', '/api/connect-rules/1'],
         ];
     }
 
@@ -100,17 +101,26 @@ class ConnectTest extends TestCase
     #[DataProvider('adminRoutes')]
     public function the_admin_routes_refuse_guests_members_and_keys(string $method, string $path)
     {
-        [$status] = $this->asUser($method, $path, null);
-        $this->assertSame(403, $status, 'A guest');
+        $this->prepareDatabase(['connect_rules' => [
+            ['id' => 1, 'name' => 'Kept', 'event' => 'post.created', 'enabled' => true, 'match' => 'all', 'position' => 0, 'run_as_user_id' => 1, 'runs' => 0, 'conditions' => '[]', 'actions' => '[]'],
+        ]]);
+        $body = ['data' => ['type' => str_contains($path, 'rules') ? 'connect-rules' : 'connect-keys', 'attributes' => ['label' => 'Mine', 'name' => 'Mine', 'event' => 'discussion.created', 'enabled' => false]]];
 
-        [$status] = $this->asUser($method, $path, 2, ['data' => ['label' => 'Mine', 'event' => 'discussion.created']]);
+        [$status] = $this->asUser($method, $path, null, $body);
+        $this->assertContains($status, [401, 403], 'A guest');
+
+        [$status] = $this->asUser($method, $path, 2, $body);
         $this->assertSame(403, $status, 'A member');
 
         // Even the admin's own key is not honoured off Connect's integration routes.
-        [$status] = $this->withKey($method, $path, self::ADMIN_KEY, ['data' => ['label' => 'Via key']]);
-        $this->assertContains($status, [400, 403], 'A key');
+        [$status] = $this->withKey($method, $path, self::ADMIN_KEY, $body);
+        $this->assertContains($status, [400, 401, 403], 'A key');
 
         $this->assertSame(4, $this->database()->table('connect_api_keys')->count());
+        $this->assertSame(['Kept', 1], [
+            $this->database()->table('connect_rules')->value('name'),
+            (int) $this->database()->table('connect_rules')->value('enabled'),
+        ]);
     }
 
     #[Test]
@@ -208,14 +218,41 @@ class ConnectTest extends TestCase
     #[Test]
     public function an_admin_creates_a_key_and_sees_it_listed()
     {
-        [$status, $body] = $this->asUser('POST', '/api/connect/keys', 1, ['data' => ['label' => 'Zapier', 'userId' => 2, 'scopes' => ['read']]]);
+        [$status, $body] = $this->asUser('POST', '/api/connect-keys', 1, ['data' => ['type' => 'connect-keys', 'attributes' => ['label' => 'Zapier', 'userId' => 2, 'scopes' => ['read', 'admin']]]]);
         $this->assertSame(201, $status, json_encode($body));
-        $this->assertStringStartsWith('ck_', $body['data']['token']);
-        $this->assertSame('normal', $body['data']['user']);
+        $this->assertStringStartsWith('ck_', $body['data']['attributes']['token']);
+        $this->assertStringStartsWith('cs_', $body['data']['attributes']['secret']);
+        $this->assertSame('normal', $body['data']['attributes']['user']);
+        $this->assertSame(['read'], $body['data']['attributes']['scopes'], 'Unknown scopes are dropped');
 
-        [$status, $body] = $this->asUser('GET', '/api/connect/keys', 1);
+        [$status, $body] = $this->asUser('POST', '/api/connect-keys', 1, ['data' => ['type' => 'connect-keys', 'attributes' => ['label' => 'Mine']]]);
+        $this->assertSame(201, $status, json_encode($body));
+        $this->assertSame('admin', $body['data']['attributes']['user'], 'A key acts as its creator by default');
+        $this->assertSame(['*'], $body['data']['attributes']['scopes']);
+
+        [$status, $body] = $this->asUser('POST', '/api/connect-keys', 1, ['data' => ['type' => 'connect-keys', 'attributes' => ['label' => 'Nobody', 'userId' => 999]]]);
+        $this->assertSame(422, $status, 'The user must exist');
+
+        [$status, $body] = $this->asUser('GET', '/api/connect-keys', 1);
         $this->assertSame(200, $status);
-        $this->assertCount(5, $body['data']);
+        $this->assertCount(6, $body['data']);
+    }
+
+    #[Test]
+    public function revoking_a_key_removes_its_subscriptions()
+    {
+        $this->prepareDatabase(['connect_hooks' => [
+            ['id' => 1, 'api_key_id' => 3, 'event' => 'post.created', 'target_url' => 'https://93.184.216.34/zap', 'failures' => 0],
+            ['id' => 2, 'api_key_id' => 1, 'event' => 'post.created', 'target_url' => 'https://93.184.216.34/other', 'failures' => 0],
+        ]]);
+
+        [$status, $body] = $this->asUser('GET', '/api/connect-subscriptions', 1);
+        $this->assertSame(200, $status, json_encode($body));
+        $this->assertEqualsCanonicalizing(['Read', 'Admin'], array_column(array_column($body['data'], 'attributes'), 'keyLabel'));
+
+        [$status] = $this->asUser('DELETE', '/api/connect-keys/3', 1);
+        $this->assertSame(204, $status);
+        $this->assertSame([2], $this->database()->table('connect_hooks')->pluck('id')->all());
     }
 
     #[Test]
@@ -250,6 +287,25 @@ class ConnectTest extends TestCase
 
         $tags = $this->database()->table('discussion_tag')->where('discussion_id', 1)->orderBy('tag_id')->pluck('tag_id')->map(fn ($t) => (int) $t)->all();
         $this->assertSame([1, 2], $tags);
+        $this->assertSame(1, (int) $this->database()->table('tags')->where('id', 2)->value('discussion_count'), "Tags' own count follows");
+    }
+
+    #[Test]
+    public function a_rule_action_its_actor_may_not_do_is_refused_and_logged()
+    {
+        // The rule runs as a plain member, who may not move people between groups.
+        $this->prepareDatabase(['connect_rules' => [
+            ['id' => 1, 'name' => 'Promote', 'event' => 'post.created', 'enabled' => true, 'match' => 'all', 'position' => 0, 'run_as_user_id' => 2, 'runs' => 0,
+                'conditions' => json_encode([]), 'actions' => json_encode([['type' => 'add_to_group', 'groupId' => 4]])],
+        ]]);
+        $log = new \Monolog\Handler\TestHandler();
+        $this->app()->getContainer()->instance(\Psr\Log\LoggerInterface::class, new \Monolog\Logger('test', [$log]));
+
+        [$status, $body] = $this->withKey('POST', '/api/connect/actions/posts', self::MEMBER_KEY, ['discussionId' => 1, 'content' => 'Promote me']);
+        $this->assertSame(201, $status, json_encode($body));
+
+        $this->assertFalse($this->database()->table('group_user')->where('user_id', 2)->where('group_id', 4)->exists());
+        $this->assertTrue($log->hasWarningThatContains('Rule action add_to_group failed on post.created: PATCH /users/2 answered 403'));
     }
 
     #[Test]
@@ -297,13 +353,44 @@ class ConnectTest extends TestCase
     {
         $rule = ['name' => 'Bad', 'event' => 'post.created', 'conditions' => [['field' => 'content', 'op' => 'matches', 'value' => '(unclosed']]];
 
-        [$status, $body] = $this->asUser('POST', '/api/connect/rules', 1, ['data' => $rule]);
+        [$status, $body] = $this->asUser('POST', '/api/connect-rules', 1, ['data' => ['type' => 'connect-rules', 'attributes' => $rule]]);
         $this->assertSame(422, $status, json_encode($body));
-        $this->assertSame('invalid_pattern', $body['errors'][0]['code']);
+        $this->assertSame('/data/attributes/conditions', $body['errors'][0]['source']['pointer']);
+        // The test forum loads no translations, so the key comes back (the_api_strings_are_translated checks it).
+        $this->assertSame('ernestdefoe-connect.api.invalid_pattern', $body['errors'][0]['detail']);
 
         $rule['conditions'][0]['value'] = '^(sale|wanted)/\\d+';
-        [$status, $body] = $this->asUser('POST', '/api/connect/rules', 1, ['data' => $rule]);
+        [$status, $body] = $this->asUser('POST', '/api/connect-rules', 1, ['data' => ['type' => 'connect-rules', 'attributes' => $rule]]);
         $this->assertSame(201, $status, json_encode($body));
+    }
+
+    #[Test]
+    public function an_admin_builds_a_rule_and_only_known_parts_are_kept()
+    {
+        $rule = ['name' => '  ', 'event' => 'discussion.created', 'match' => 'any',
+            'conditions' => [['field' => 'title', 'op' => 'contains', 'value' => 'Sale'], ['field' => 'title', 'op' => 'explode'], ['op' => 'equals']],
+            'actions' => [['type' => 'add_tag', 'tagId' => 2, 'extra' => 'x'], ['type' => 'drop_everything']]];
+
+        [$status, $body] = $this->asUser('POST', '/api/connect-rules', 1, ['data' => ['type' => 'connect-rules', 'attributes' => $rule]]);
+        $this->assertSame(201, $status, json_encode($body));
+        $attributes = $body['data']['attributes'];
+        $this->assertSame('ernestdefoe-connect.api.untitled_rule', $attributes['name']);
+        $this->assertSame([['field' => 'title', 'op' => 'contains', 'value' => 'Sale']], $attributes['conditions']);
+        $this->assertSame([['type' => 'add_tag', 'tagId' => '2']], $attributes['actions']);
+        $this->assertSame(1, $attributes['runAsUserId'], 'A rule runs as its creator by default');
+
+        $id = $body['data']['id'];
+        [$status, $body] = $this->asUser('PATCH', "/api/connect-rules/$id", 1, ['data' => ['type' => 'connect-rules', 'id' => $id, 'attributes' => ['enabled' => false]]]);
+        $this->assertSame(200, $status, json_encode($body));
+        $this->assertFalse($body['data']['attributes']['enabled']);
+        $this->assertSame('any', $body['data']['attributes']['match'], 'An update keeps what it does not send');
+
+        [$status, $body] = $this->asUser('PATCH', "/api/connect-rules/$id", 1, ['data' => ['type' => 'connect-rules', 'id' => $id, 'attributes' => ['event' => 'nothing.happened']]]);
+        $this->assertSame(422, $status, 'Only a known trigger event');
+
+        [$status] = $this->asUser('DELETE', "/api/connect-rules/$id", 1);
+        $this->assertSame(204, $status);
+        $this->assertSame(0, $this->database()->table('connect_rules')->count());
     }
 
     #[Test]
@@ -393,5 +480,15 @@ class ConnectTest extends TestCase
         $this->assertSame(201, $status);
         $this->assertCount(2, $sent);
         $this->assertSame(0, $this->database()->table('connect_hooks')->count(), 'A 410 removes the subscription');
+    }
+
+    #[Test]
+    public function the_api_strings_are_translated()
+    {
+        $locale = \Symfony\Component\Yaml\Yaml::parseFile(__DIR__.'/../../../locale/en.yml');
+
+        foreach (['untitled_rule', 'invalid_pattern'] as $key) {
+            $this->assertNotEmpty($locale['ernestdefoe-connect']['api'][$key] ?? null, $key);
+        }
     }
 }

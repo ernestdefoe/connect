@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Hook extends AbstractModel
 {
     protected $table = 'connect_hooks';
-    protected $guarded = [];
+    protected $fillable = ['api_key_id', 'event', 'target_url', 'zap_id'];
 
     /** @return BelongsTo<ApiKey, $this> */
     public function apiKey(): BelongsTo

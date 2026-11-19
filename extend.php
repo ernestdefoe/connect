@@ -8,6 +8,7 @@
 
 namespace Ernestdefoe\Connect;
 
+use Ernestdefoe\Connect\Api;
 use Ernestdefoe\Connect\Api\Controller;
 use Ernestdefoe\Connect\Api\Controller\Admin;
 use Ernestdefoe\Connect\Console\CreateKeyCommand;
@@ -36,6 +37,14 @@ return [
     (new Extend\Event())
         ->subscribe(DispatchWebhooks::class),
 
+    // Admin data: API keys, rules and live subscriptions are JSON:API resources.
+    new Extend\ApiResource(Api\Resource\ApiKeyResource::class),
+    new Extend\ApiResource(Api\Resource\RuleResource::class),
+    new Extend\ApiResource(Api\Resource\HookResource::class),
+
+    // The integration routes speak the plain JSON that Zapier, Make and REST
+    // Hooks expect (not JSON:API), and authenticate with a Connect key, so they
+    // are request handlers rather than resources.
     (new Extend\Routes('api'))
         // Connection test + auth (Zapier auth.test)
         ->get('/connect/me', 'connect.me', Controller\MeController::class)
@@ -51,17 +60,6 @@ return [
         // Actions (Creates)
         ->post('/connect/actions/discussions', 'connect.actions.discussions', Controller\Action\CreateDiscussionController::class)
         ->post('/connect/actions/posts', 'connect.actions.posts', Controller\Action\CreatePostController::class)
-
-        // ── Admin (admin-gated in the controllers) ──────────────────────────
-        ->get('/connect/keys', 'connect.keys.list', Admin\ListKeysController::class)
-        ->post('/connect/keys', 'connect.keys.create', Admin\CreateKeyController::class)
-        ->delete('/connect/keys/{id}', 'connect.keys.delete', Admin\DeleteKeyController::class)
-        ->get('/connect/subscriptions', 'connect.subscriptions', Admin\ListSubscriptionsController::class)
-        ->get('/connect/events', 'connect.events', Admin\ListEventsController::class)
-        ->get('/connect/meta', 'connect.meta', Admin\MetaController::class)
-        // Rules engine (admin)
-        ->get('/connect/rules', 'connect.rules.list', Admin\ListRulesController::class)
-        ->post('/connect/rules', 'connect.rules.create', Admin\SaveRuleController::class)
-        ->patch('/connect/rules/{id}', 'connect.rules.update', Admin\SaveRuleController::class)
-        ->delete('/connect/rules/{id}', 'connect.rules.delete', Admin\DeleteRuleController::class),
+        // What the admin Rules builder can offer on this forum (admin-gated)
+        ->get('/connect/meta', 'connect.meta', Admin\MetaController::class),
 ];

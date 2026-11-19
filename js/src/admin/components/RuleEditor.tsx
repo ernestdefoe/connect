@@ -91,101 +91,8 @@ export default class RuleEditor extends Component<{
           })}
         </div>
 
-        {/* Conditions */}
-        <div className="Form-group">
-          <label>{t('rule_conditions')}</label>
-          <div className="ConnectRule-matchRow">
-            {t('rule_match_pre')}
-            {Select.component({
-              value: this.r.match,
-              options: { all: t('rule_match_all'), any: t('rule_match_any') },
-              onchange: (v: string) => {
-                this.r.match = v;
-              },
-            })}
-            {t('rule_match_post')}
-          </div>
-          {this.r.conditions.map((c, i) => (
-            <div className="ConnectRule-row">
-              <input
-                className="FormControl"
-                placeholder={extractText(t('rule_field'))}
-                value={c.field}
-                oninput={(e: any) => {
-                  c.field = e.target.value;
-                }}
-              />
-              {Select.component({
-                value: c.op,
-                options: Object.fromEntries(meta.operators.map((o) => [o, t('op_' + o)])),
-                onchange: (v: string) => {
-                  c.op = v;
-                },
-              })}
-              {['is_empty', 'is_not_empty'].includes(c.op) ? null : (
-                <input
-                  className="FormControl"
-                  placeholder={extractText(t('rule_value'))}
-                  value={c.value}
-                  oninput={(e: any) => {
-                    c.value = e.target.value;
-                  }}
-                />
-              )}
-              {Button.component({
-                className: 'Button Button--icon Button--flat',
-                icon: 'fas fa-times',
-                onclick: () => {
-                  this.r.conditions.splice(i, 1);
-                },
-              })}
-            </div>
-          ))}
-          {Button.component(
-            {
-              className: 'Button Button--flat ConnectRule-add',
-              icon: 'fas fa-plus',
-              onclick: () => {
-                this.r.conditions.push({ field: 'title', op: 'contains', value: '' });
-              },
-            },
-            t('add_condition')
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="Form-group">
-          <label>{t('rule_do')}</label>
-          {this.r.actions.map((a, i) => (
-            <div className="ConnectRule-row ConnectRule-actionRow">
-              {Select.component({
-                value: a.type,
-                options: Object.fromEntries(meta.actions.map((x) => [x.key, extractText(t('actions.' + x.key))])),
-                onchange: (v: string) => {
-                  this.r.actions[i] = { type: v };
-                },
-              })}
-              {this.actionParams(a, meta)}
-              {Button.component({
-                className: 'Button Button--icon Button--flat',
-                icon: 'fas fa-times',
-                onclick: () => {
-                  this.r.actions.splice(i, 1);
-                },
-              })}
-            </div>
-          ))}
-          {Button.component(
-            {
-              className: 'Button Button--flat ConnectRule-add',
-              icon: 'fas fa-plus',
-              onclick: () => {
-                this.r.actions.push({ type: meta.actions[0]?.key || 'reply' });
-              },
-            },
-            t('add_action')
-          )}
-        </div>
+        {this.conditionsGroup(meta)}
+        {this.actionsGroup(meta)}
 
         <div className="ConnectRule-actions">
           {Button.component(
@@ -194,6 +101,112 @@ export default class RuleEditor extends Component<{
           )}
           {Button.component({ className: 'Button Button--flat', onclick: () => this.attrs.onCancel() }, t('cancel'))}
         </div>
+      </div>
+    );
+  }
+
+  private conditionsGroup(meta: Meta): Mithril.Children {
+    return (
+      <div className="Form-group">
+        <label>{t('rule_conditions')}</label>
+        <div className="ConnectRule-matchRow">
+          {t('rule_match_pre')}
+          {Select.component({
+            value: this.r.match,
+            options: { all: t('rule_match_all'), any: t('rule_match_any') },
+            onchange: (v: string) => {
+              this.r.match = v;
+            },
+          })}
+          {t('rule_match_post')}
+        </div>
+        {this.r.conditions.map((c, i) => this.conditionRow(c, i, meta))}
+        {Button.component(
+          {
+            className: 'Button Button--flat ConnectRule-add',
+            icon: 'fas fa-plus',
+            onclick: () => {
+              this.r.conditions.push({ field: 'title', op: 'contains', value: '' });
+            },
+          },
+          t('add_condition')
+        )}
+      </div>
+    );
+  }
+
+  private conditionRow(c: Cond, i: number, meta: Meta): Mithril.Children {
+    return (
+      <div className="ConnectRule-row">
+        <input
+          className="FormControl"
+          placeholder={extractText(t('rule_field'))}
+          value={c.field}
+          oninput={(e: any) => {
+            c.field = e.target.value;
+          }}
+        />
+        {Select.component({
+          value: c.op,
+          options: Object.fromEntries(meta.operators.map((o) => [o, t('op_' + o)])),
+          onchange: (v: string) => {
+            c.op = v;
+          },
+        })}
+        {['is_empty', 'is_not_empty'].includes(c.op) ? null : (
+          <input
+            className="FormControl"
+            placeholder={extractText(t('rule_value'))}
+            value={c.value}
+            oninput={(e: any) => {
+              c.value = e.target.value;
+            }}
+          />
+        )}
+        {Button.component({
+          className: 'Button Button--icon Button--flat',
+          icon: 'fas fa-times',
+          onclick: () => {
+            this.r.conditions.splice(i, 1);
+          },
+        })}
+      </div>
+    );
+  }
+
+  private actionsGroup(meta: Meta): Mithril.Children {
+    return (
+      <div className="Form-group">
+        <label>{t('rule_do')}</label>
+        {this.r.actions.map((a, i) => (
+          <div className="ConnectRule-row ConnectRule-actionRow">
+            {Select.component({
+              value: a.type,
+              options: Object.fromEntries(meta.actions.map((x) => [x.key, extractText(t('actions.' + x.key))])),
+              onchange: (v: string) => {
+                this.r.actions[i] = { type: v };
+              },
+            })}
+            {this.actionParams(a, meta)}
+            {Button.component({
+              className: 'Button Button--icon Button--flat',
+              icon: 'fas fa-times',
+              onclick: () => {
+                this.r.actions.splice(i, 1);
+              },
+            })}
+          </div>
+        ))}
+        {Button.component(
+          {
+            className: 'Button Button--flat ConnectRule-add',
+            icon: 'fas fa-plus',
+            onclick: () => {
+              this.r.actions.push({ type: meta.actions[0]?.key || 'reply' });
+            },
+          },
+          t('add_action')
+        )}
       </div>
     );
   }

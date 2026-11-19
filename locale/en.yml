@@ -123,3 +123,4 @@ ernestdefoe-connect:
 
   api:
     untitled_rule: Untitled rule
+    invalid_pattern: This "matches" pattern is not valid. Check it for a typo.

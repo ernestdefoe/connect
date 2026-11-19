@@ -24,7 +24,10 @@ use Illuminate\Support\Str;
 class ApiKey extends AbstractModel
 {
     protected $table = 'connect_api_keys';
-    protected $guarded = [];
+    /** The scopes a key can carry; none means all of them. */
+    public const SCOPES = ['read', 'write'];
+
+    protected $fillable = ['label', 'user_id', 'scopes'];
     protected $casts = [
         'scopes' => 'array',
         'last_used_at' => 'datetime',
@@ -35,12 +38,19 @@ class ApiKey extends AbstractModel
     {
         $key = new self();
         $key->label = mb_substr($label, 0, 100) ?: 'API key';
-        $key->token = 'ck_'.Str::random(48);
-        $key->secret = 'cs_'.Str::random(48);
         $key->user_id = $userId;
         $key->scopes = $scopes;
 
-        return $key;
+        return $key->mint();
+    }
+
+    /** Give the key a fresh Bearer token and HMAC signing secret. */
+    public function mint(): static
+    {
+        $this->token = 'ck_'.Str::random(48);
+        $this->secret = 'cs_'.Str::random(48);
+
+        return $this;
     }
 
     public function hasScope(string $scope): bool

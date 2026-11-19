@@ -62,3 +62,10 @@
 .ConnectZapier-setup h4 { font-weight: 700; margin: 0 0 4px; }
 .ConnectZapier-cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; }
 .ConnectZapier-today .ConnectZapier-steps { margin: 6px 0 12px; }
+
+// Phones: the rule and key tables scroll sideways instead of cutting off
+// their edit, delete and revoke buttons.
+@media (max-width: 767px) {
+  .ConnectAdmin-table { display: block; overflow-x: auto; white-space: nowrap; }
+  .ConnectAdmin-cred code { max-width: 150px; }
+}

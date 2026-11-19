@@ -235,6 +235,26 @@ export default class ZapierPanel extends Component<Attrs> {
     );
   }
 
+  /** One tile per popular app; picking one narrows the templates below to it. */
+  private tiles(): Mithril.Children {
+    return (
+      <div className="ConnectZapier-tiles">
+        {POPULAR.map((p) => (
+          <button
+            className={'ConnectZapier-tile' + (this.selected === p.slug ? ' is-active' : '')}
+            onclick={() => {
+              this.selected = p.slug;
+            }}
+            type="button"
+          >
+            <i className={p.icon} />
+            <span>{p.label}</span>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   /** The live embedded experience: recipe tiles + templates + full builder. */
   private embed(): Mithril.Children {
     if (!this.sdkReady) {
@@ -251,20 +271,7 @@ export default class ZapierPanel extends Component<Attrs> {
     return (
       <div className="ConnectZapier-embed">
         <h4>{t('zapier_recipes')}</h4>
-        <div className="ConnectZapier-tiles">
-          {POPULAR.map((p) => (
-            <button
-              className={'ConnectZapier-tile' + (this.selected === p.slug ? ' is-active' : '')}
-              onclick={() => {
-                this.selected = p.slug;
-              }}
-              type="button"
-            >
-              <i className={p.icon} />
-              <span>{p.label}</span>
-            </button>
-          ))}
-        </div>
+        {this.tiles()}
 
         {m('zapier-zap-templates', {
           'client-id': clientId,

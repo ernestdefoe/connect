@@ -4,6 +4,7 @@ namespace Ernestdefoe\Connect\Api\Controller\Admin;
 
 use Ernestdefoe\Connect\Rules\ActionRegistry;
 use Ernestdefoe\Connect\Rules\Conditions;
+use Ernestdefoe\Connect\Support\Tags;
 use Ernestdefoe\Connect\Webhook\EventRegistry;
 use Flarum\Group\Group;
 use Flarum\Http\RequestUtil;
@@ -23,12 +24,12 @@ class MetaController implements RequestHandlerInterface
     {
         RequestUtil::getActor($request)->assertAdmin();
 
-        $groups = Group::query()->whereNotIn('id', [2, 3]) // hide Guest + Member pseudo-groups
+        $groups = Group::query()->whereNotIn('id', [Group::GUEST_ID, Group::MEMBER_ID])
             ->get(['id', 'name_singular'])
             ->map(fn ($g) => ['id' => (int) $g->id, 'name' => $g->name_singular])->values()->all();
 
         $tags = [];
-        if (class_exists(\Flarum\Tags\Tag::class)) {
+        if (Tags::enabled()) {
             $tags = \Flarum\Tags\Tag::query()->get(['id', 'name'])
                 ->map(fn ($t) => ['id' => (int) $t->id, 'name' => $t->name])->values()->all();
         }

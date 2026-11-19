@@ -3,14 +3,15 @@
 namespace Ernestdefoe\Connect\Console;
 
 use Ernestdefoe\Connect\Model\ApiKey;
+use Ernestdefoe\Connect\Support\Admins;
 use Flarum\User\User;
 use Illuminate\Console\Command;
 
 /**
  * connect:key {label} {--user=} {--scopes=read,write}.
  *
- * Mints a Connect API key from the CLI. Handy for setting up an integration
- * before the admin UI exists; prints the token + secret once (they're the only
+ * Mints a Connect API key from the CLI. Handy for scripting an integration
+ * setup; prints the token + secret once (they're the only
  * time the raw values are shown outside the DB).
  */
 class CreateKeyCommand extends Command
@@ -22,7 +23,7 @@ class CreateKeyCommand extends Command
     {
         $userId = $this->option('user')
             ? (int) $this->option('user')
-            : (int) (User::query()->where('is_email_confirmed', true)->orderBy('id')->value('id'));
+            : (int) Admins::first()?->id;
 
         if (! $userId || ! User::query()->find($userId)) {
             $this->error('No valid user to attach the key to. Pass --user=<id>.');
@@ -30,7 +31,7 @@ class CreateKeyCommand extends Command
             return 1;
         }
 
-        $scopes = array_values(array_filter(array_map('trim', explode(',', (string) $this->option('scopes')))));
+        $scopes = array_values(array_intersect(array_map('trim', explode(',', (string) $this->option('scopes'))), ApiKey::SCOPES));
 
         $key = ApiKey::build((string) $this->argument('label'), $userId, $scopes);
         $key->save();

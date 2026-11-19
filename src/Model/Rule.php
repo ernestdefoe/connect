@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Rule extends AbstractModel
 {
     protected $table = 'connect_rules';
-    protected $guarded = [];
+    protected $fillable = ['name', 'event', 'enabled', 'match', 'conditions', 'actions', 'run_as_user_id'];
     protected $casts = [
         'enabled' => 'boolean',
         'conditions' => 'array',

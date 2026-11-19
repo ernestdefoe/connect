@@ -4,6 +4,7 @@ namespace Ernestdefoe\Connect\Rules;
 
 use Carbon\Carbon;
 use Ernestdefoe\Connect\Model\Rule;
+use Ernestdefoe\Connect\Support\Admins;
 use Flarum\Queue\AbstractJob;
 use Flarum\User\User;
 
@@ -51,9 +52,6 @@ class RunRule extends AbstractJob
         }
 
         // Fall back to the first admin so a rule still runs if its actor is gone.
-        return User::query()
-            ->whereExists(fn ($q) => $q->selectRaw(1)->from('group_user')
-                ->whereColumn('group_user.user_id', 'users.id')->where('group_id', 1))
-            ->orderBy('id')->first();
+        return Admins::first();
     }
 }

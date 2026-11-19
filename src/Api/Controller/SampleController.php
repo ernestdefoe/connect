@@ -2,10 +2,11 @@
 
 namespace Ernestdefoe\Connect\Api\Controller;
 
-use Ernestdefoe\Connect\Listener\DispatchWebhooks;
 use Ernestdefoe\Connect\Model\ApiKey;
+use Ernestdefoe\Connect\Support\Tags;
 use Ernestdefoe\Connect\Webhook\Audience;
 use Ernestdefoe\Connect\Webhook\EventRegistry;
+use Ernestdefoe\Connect\Webhook\Payload;
 use Flarum\Discussion\Discussion;
 use Flarum\Http\UrlGenerator;
 use Flarum\Post\Post;
@@ -18,13 +19,15 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * GET /api/connect/samples/{event} — recent real items shaped exactly like the
- * webhook payload for that event. Zapier calls this during Zap setup (performList)
- * so users can map fields against real data without waiting for a live trigger.
- * The shape here MUST match DispatchWebhooks for the same event, and it shows
- * only what the key's user could see, exactly as the live webhooks do.
+ * webhook payload for that event (both come from Payload). Zapier calls this
+ * during Zap setup (performList) so users can map fields against real data
+ * without waiting for a live trigger. It shows only what the key's user could
+ * see, exactly as the live webhooks do.
  */
 class SampleController implements RequestHandlerInterface
 {
+    private const LIMIT = 3;
+
     public function __construct(
         protected UrlGenerator $url
     ) {
@@ -41,8 +44,6 @@ class SampleController implements RequestHandlerInterface
             return new JsonResponse(['errors' => [['status' => '403', 'code' => 'insufficient_scope']]], 403);
         }
 
-        $viewer = $key->user;
-
         $event = (string) Arr::get($request->getAttribute('routeParameters') ?? [], 'event', '');
         if (! EventRegistry::exists($event)) {
             return new JsonResponse(['errors' => [['status' => '404', 'code' => 'unknown_event']]], 404);
@@ -50,45 +51,36 @@ class SampleController implements RequestHandlerInterface
 
         $base = rtrim($this->url->to('forum')->base(), '/');
 
-        // flarum/tags adds `tags` through a relation resolver: load it with the
-        // author only when that relation exists (see DispatchWebhooks::tagList).
-        $discussionRelations = (new Discussion())->isRelation('tags') ? ['user', 'tags'] : ['user'];
-
-        $data = match ($event) {
-            'discussion.created' => Discussion::query()->whereVisibleTo($viewer)
-                ->where('is_private', false)->whereNull('hidden_at')
-                ->with($discussionRelations)->latest()->limit(3)->get()
-                ->map(fn (Discussion $d) => [
-                    'id' => (int) $d->id, 'title' => $d->title, 'slug' => $d->slug,
-                    'url' => $base.'/d/'.$d->id.'-'.$d->slug,
-                    'author' => $d->user?->display_name, 'authorId' => (int) $d->user_id,
-                    // Keep the sample shape identical to the live webhook (Zapier
-                    // requires perform + performList to match).
-                    'tagList' => DispatchWebhooks::tagList($d),
-                    'createdAt' => optional($d->created_at)->toIso8601String(),
-                ])->values()->all(),
-
-            'post.created' => Post::query()->whereVisibleTo($viewer)
-                ->where('type', 'comment')->whereNull('hidden_at')->where('number', '>', 1)
-                ->with('user')->latest()->limit(3)->get()
-                ->map(fn (Post $p) => [
-                    'id' => (int) $p->id, 'discussionId' => (int) $p->discussion_id,
-                    'url' => $base.'/d/'.$p->discussion_id.'/'.(int) $p->number,
-                    'content' => $p->content, 'author' => $p->user?->display_name,
-                    'authorId' => (int) $p->user_id, 'createdAt' => optional($p->created_at)->toIso8601String(),
-                ])->values()->all(),
-
-            'user.registered' => User::query()->whereVisibleTo($viewer)
-                ->latest('joined_at')->limit(3)->get()
-                ->map(fn (User $u) => [
-                    'id' => (int) $u->id, 'username' => $u->username, 'name' => $u->display_name,
-                    'email' => Audience::canSeeEmail($viewer, $u) ? $u->email : null, 'url' => $base.'/u/'.$u->username,
-                    'createdAt' => optional($u->joined_at)->toIso8601String(),
-                ])->values()->all(),
-
+        return new JsonResponse(match ($event) {
+            'discussion.created' => $this->discussions($key->user, $base),
+            'post.created' => $this->posts($key->user, $base),
+            'user.registered' => $this->users($key->user, $base),
             default => [],
-        };
+        });
+    }
 
-        return new JsonResponse($data);
+    private function discussions(User $viewer, string $base): array
+    {
+        return Discussion::query()->whereVisibleTo($viewer)
+            ->where('is_private', false)->whereNull('hidden_at')
+            ->with(Tags::enabled() ? ['user', 'tags'] : ['user'])
+            ->latest()->limit(self::LIMIT)->get()
+            ->map(fn (Discussion $d) => Payload::discussion($d, $base))->values()->all();
+    }
+
+    private function posts(User $viewer, string $base): array
+    {
+        return Post::query()->whereVisibleTo($viewer)
+            ->where('type', 'comment')->whereNull('hidden_at')->where('number', '>', 1)
+            ->with('user')->latest()->limit(self::LIMIT)->get()
+            ->map(fn (Post $p) => Payload::post($p, $base))->values()->all();
+    }
+
+    private function users(User $viewer, string $base): array
+    {
+        return User::query()->whereVisibleTo($viewer)
+            ->latest('joined_at')->limit(self::LIMIT)->get()
+            ->map(fn (User $u) => array_replace(Payload::user($u, $base), ['email' => Audience::canSeeEmail($viewer, $u) ? $u->email : null]))
+            ->values()->all();
     }
 }

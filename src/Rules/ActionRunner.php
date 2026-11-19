@@ -77,35 +77,25 @@ class ActionRunner
         switch ($type) {
             case 'reply':
                 if ($ctx['discussionId'] && trim((string) ($a['content'] ?? '')) !== '') {
-                    $this->api->withActor($actor)->withBody(['data' => [
+                    $this->call($actor, 'POST', '/posts', [
                         'type' => 'posts',
                         'attributes' => ['content' => (string) $a['content']],
                         'relationships' => ['discussion' => ['data' => ['type' => 'discussions', 'id' => (string) $ctx['discussionId']]]],
-                    ]])->post('/posts');
+                    ]);
                 }
                 break;
 
             case 'add_tag':
             case 'remove_tag':
-                if ($ctx['discussionId'] && ($tagId = (int) ($a['tagId'] ?? 0))) {
-                    $d = Discussion::query()->find($ctx['discussionId']);
-                    // flarum/tags adds this relation through a resolver, which
-                    // method_exists() cannot see: ask Eloquent for it instead.
-                    $relation = $d?->relationResolver(Discussion::class, 'tags');
-                    if ($d && $relation) {
-                        $tags = $relation($d);
-                        $type === 'add_tag' ? $tags->syncWithoutDetaching([$tagId]) : $tags->detach($tagId);
-                    }
+                if ($ctx['discussionId'] && ($tagId = (int) ($a['tagId'] ?? 0)) && ($d = Discussion::query()->whereKey($ctx['discussionId'])->first())) {
+                    $this->relate($actor, 'discussions', (int) $d->id, 'tags', $d->getAttribute('tags')->pluck('id')->all(), $tagId, $type === 'add_tag');
                 }
                 break;
 
             case 'add_to_group':
             case 'remove_from_group':
-                if ($ctx['userId'] && ($groupId = (int) ($a['groupId'] ?? 0))) {
-                    $u = User::query()->find($ctx['userId']);
-                    if ($u) {
-                        $type === 'add_to_group' ? $u->groups()->syncWithoutDetaching([$groupId]) : $u->groups()->detach($groupId);
-                    }
+                if ($ctx['userId'] && ($groupId = (int) ($a['groupId'] ?? 0)) && ($u = User::query()->whereKey($ctx['userId'])->first())) {
+                    $this->relate($actor, 'users', (int) $u->id, 'groups', $u->groups()->pluck('id')->all(), $groupId, $type === 'add_to_group');
                 }
                 break;
 
@@ -119,6 +109,39 @@ class ActionRunner
                     ]);
                 }
                 break;
+        }
+    }
+
+    /**
+     * Add $id to (or remove it from) a to-many relationship through Flarum's own
+     * API, so the owning extension's permissions, counts and events all apply.
+     */
+    private function relate(User $actor, string $type, int $modelId, string $relation, array $current, int $id, bool $add): void
+    {
+        $current = array_map('intval', $current);
+        if ($add === in_array($id, $current, true)) {
+            return; // already there / already gone
+        }
+
+        $ids = $add ? [...$current, $id] : array_diff($current, [$id]);
+
+        $this->call($actor, 'PATCH', "/$type/$modelId", [
+            'type' => $type,
+            'id' => (string) $modelId,
+            'relationships' => [$relation => ['data' => array_map(
+                fn (int $related) => ['type' => $relation, 'id' => (string) $related],
+                array_values($ids)
+            )]],
+        ]);
+    }
+
+    /** Send one internal API request as $actor; a refusal is thrown so run() logs it. */
+    private function call(User $actor, string $method, string $path, array $data): void
+    {
+        $response = $this->api->withActor($actor)->withBody(['data' => $data])->send($method, $path);
+
+        if ($response->getStatusCode() >= 400) {
+            throw new \RuntimeException("$method $path answered ".$response->getStatusCode().': '.$response->getBody());
         }
     }
 
